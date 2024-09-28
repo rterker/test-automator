@@ -1,0 +1,10 @@
+{
+    "manifest_version": 1,
+    "name": "Automation Testing Prototype",
+    "description": "Prototype for Archer automation testing platform",
+    "version": "1.0",
+    "action": {
+      "default_popup": "index.html",
+      "default_icon": "archer_icon.png"
+    }
+  }
