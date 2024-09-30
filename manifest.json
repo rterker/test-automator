@@ -1,10 +1,24 @@
 {
-    "manifest_version": 1,
+    "manifest_version": 3,
     "name": "Automation Testing Prototype",
     "description": "Prototype for Archer automation testing platform",
     "version": "1.0",
+    "permissions": [
+        "activeTab"
+    ],
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["content-script.js"]
+        }
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
     "action": {
-      "default_popup": "index.html",
-      "default_icon": "test_image.png"
+        "default_icon": "archer_logo.png",
+        "default_title": "Click to start recording"
     }
   }
+
+
