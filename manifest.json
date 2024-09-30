@@ -4,7 +4,8 @@
     "description": "Prototype for Archer automation testing platform",
     "version": "1.0",
     "permissions": [
-        "activeTab"
+        "activeTab",
+        "tabs"
     ],
     "content_scripts": [
         {
@@ -13,7 +14,8 @@
         }
     ],
     "background": {
-        "service_worker": "background.js"
+        "service_worker": "background.js",
+        "type": "module"
     },
     "action": {
         "default_icon": "archer_logo.png",
