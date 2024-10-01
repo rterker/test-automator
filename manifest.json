@@ -18,7 +18,7 @@
         "type": "module"
     },
     "action": {
-        "default_icon": "archer_logo.png",
+        "default_icon": "logo.png",
         "default_title": "Click to start recording"
     }
   }
