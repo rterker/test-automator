@@ -4,7 +4,8 @@
     "description": "Prototype for Archer automation testing platform",
     "version": "1.0",
     "permissions": [
-        "tabs"
+        "tabs",
+        "storage"
     ],
     "content_scripts": [
         {
@@ -18,7 +19,8 @@
     },
     "action": {
         "default_icon": "logo.png",
-        "default_title": "Click to activate extension"
+        "default_title": "Click to activate extension",
+        "default_popup": "popup.html"
     }
   }
 

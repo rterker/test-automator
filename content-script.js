@@ -5,10 +5,11 @@ let tabUrl = window.location.href;
 //we are enabling/disabling extension by tab, so in the case where you are in the same tab but change the content of the document, 
 //check if the extension is enabled in background, so you can automatically reenable
 chrome.runtime.sendMessage('content-script-loaded', (response) => {
-    if (response === 'extension-enabled') {
+    if (response === 'recording-enabled') {
         addAllListeners();
-    } else if (response === 'extension-not-enabled') {
+    } else if (response === 'recording-disabled') {
         removeAllListeners();
+    
     }
 });
 
@@ -63,14 +64,14 @@ function removeAllListeners() {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log('Content-script received message from background');
 
-    if (message.action === 'enable-extension') {
+    if (message.action === 'start-recording') {
         addAllListeners();
-        alert(`Extension enabled for Tab Id: ${message.tabId}`);
+        alert(`Recording on tab ${message.tabId}`);
     }
 
-    if (message.action === 'disable-extension') {
+    if (message.action === 'stop-recording') {
         removeAllListeners();
-        alert(`Extension disabled for Tab Id: ${message.tabId}`);
+        alert(`Recording stopped on tab ${message.tabId}`);
     }
 });
 
