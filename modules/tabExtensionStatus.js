@@ -1,19 +1,33 @@
 
-const tabExtensionStatus = {};
+const tabRecordingStatus = {};
+const tabPlaybackStatus = {};
 
 export function initializeTab(tabId) {
-    tabExtensionStatus[tabId] = false;
-    console.log(`InitializeTab: Extension activation status of ${tabId} is ${tabExtensionStatus[tabId]}`);
+    tabRecordingStatus[tabId] = false;
+    tabPlaybackStatus[tabId] = false;
+    console.log(`InitializeTab: Recording status of ${tabId} is ${tabRecordingStatus[tabId]}`);
+    console.log(`InitializeTab: Playback status of ${tabId} is ${tabPlaybackStatus[tabId]}`);
 }
 
-export function isExtensionEnabled(tabId) {
-    console.log(`isExtensionEnabled: Extension activation status of ${tabId} is ${tabExtensionStatus[tabId]}`);
-    return tabExtensionStatus[tabId];
+export function isPlaying(tabId) {
+    console.log(`isPlaying: Playback status of ${tabId} is ${tabPlaybackStatus[tabId]}`);
+    return tabPlaybackStatus[tabId];
 }
 
-export function toggleExtension(tabId) {
-    const toggledStatus = tabExtensionStatus[tabId] = !tabExtensionStatus[tabId];
-    console.log(`toggleExtension: Extension activation status of ${tabId} is now ${toggledStatus}`);
+export function isRecording(tabId) {
+    console.log(`isRecording: Recording status of ${tabId} is ${tabRecordingStatus[tabId]}`);
+    return tabRecordingStatus[tabId];
+}
+
+export function toggleRecording(tabId) {
+    const toggledStatus = tabRecordingStatus[tabId] = !tabRecordingStatus[tabId];
+    console.log(`toggleExtension: Recording status of ${tabId} is now ${toggledStatus}`);
+    return toggledStatus;
+}
+
+export function togglePlayback(tabId) {
+    const toggledStatus = tabPlaybackStatus[tabId] = !tabPlaybackStatus[tabId];
+    console.log(`toggleExtension: Playback status of ${tabId} is now ${toggledStatus}`);
     return toggledStatus;
 }
 
