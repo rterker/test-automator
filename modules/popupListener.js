@@ -1,24 +1,28 @@
+console.log('popupListener.js is loading...');
+
 import { isPlaying, isRecording, togglePlayback, toggleRecording } from "./tabExtensionStatus.js";
 
+//TODO: pass tabId with each message
+//TODO: modularize
 export const setupPopupMessageListener = () => {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        console.log('popupMessageListener received message in background.');
+        console.log('popupListener.js: message received.');
+
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             const tabId = tabs[0].id;
-            console.log(`All tabs: ${tabs}`);
-            console.log(`From popupListener, current tabId is ${tabId}`);
-            if (message === 'start-recording') {
+            console.log(`popupListener.js: current tabId is ${tabId}`);
+
+            if (message === 'get-recording-status') {
+                console.log(`popupListener.js: get-recording-status message received.`);
                 const recording = isRecording(tabId);
-                if (recording) {
-                    toggleRecording(tabId);
-                    chrome.tabs.sendMessage(tabId, { tabId, action: 'disable-extension' } );
-                } else if (!recording) {
-                    toggleRecording(tabId);
-                    chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'enable-extension' } );
-                }
+                console.log(`popupListener.js: recording status is ${recording}.`);
+                sendResponse({ isRecording: recording });
+            }
+            if (message === 'start-recording') {
+                chrome.tabs.sendMessage(tabId, { tabId, action: 'start-recording' } );
             }
             if (message === 'stop-recording') {
-    
+                chrome.tabs.sendMessage(tabId, { tabId, action: 'stop-recording' } );
             }
             if (message === 'start-playback') {
     
@@ -26,8 +30,14 @@ export const setupPopupMessageListener = () => {
             if (message === 'stop-playback') {
     
             }
+            if (message === 'get-playback-status') {
+                const playing = isPlaying(tabId);
+                sendResponse({ isPlaying: playing });
+            }
 
         });
+        //this line tells chrome that we are sending an async response and to keep the message connection open waiting
+        return true;
         
     });
 }

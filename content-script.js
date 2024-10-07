@@ -1,4 +1,4 @@
-console.log('content-script.js loaded');
+console.log('content-script.js is loading...');
 
 let tabUrl = window.location.href;
 
@@ -6,8 +6,10 @@ let tabUrl = window.location.href;
 //check if the extension is enabled in background, so you can automatically reenable
 chrome.runtime.sendMessage('content-script-loaded', (response) => {
     if (response === 'recording-enabled') {
+        console.log(`content-script.js: recording-enabled message received.`);
         addAllListeners();
     } else if (response === 'recording-disabled') {
+        console.log(`content-script.js: recording-disabled message received.`);
         removeAllListeners();
     
     }
@@ -66,12 +68,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     if (message.action === 'start-recording') {
         addAllListeners();
-        alert(`Recording on tab ${message.tabId}`);
+        alert(`content-script.js: recording on tab ${message.tabId}`);
     }
 
     if (message.action === 'stop-recording') {
         removeAllListeners();
-        alert(`Recording stopped on tab ${message.tabId}`);
+        alert(`content-script.js: recording stopped on tab ${message.tabId}`);
     }
 });
 
