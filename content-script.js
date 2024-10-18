@@ -11,7 +11,6 @@ chrome.runtime.sendMessage('content-script-loaded', (response) => {
     } else if (response === 'recording-disabled') {
         console.log(`content-script.js: recording-disabled message received.`);
         removeAllListeners();
-    
     }
 });
 
@@ -68,12 +67,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     if (message.action === 'start-recording') {
         addAllListeners();
-        alert(`content-script.js: recording on tab ${message.tabId}`);
+        alert(`content-script.js: recording started on tab ${message.tabId}`);
+        sendResponse({ tabId: message.tabId, message: 'content-script-recording-started'});
     }
-
     if (message.action === 'stop-recording') {
         removeAllListeners();
         alert(`content-script.js: recording stopped on tab ${message.tabId}`);
+        sendResponse({ tabId: message.tabId, message: 'content-script-recording-stopped'});
     }
 });
 

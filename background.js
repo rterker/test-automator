@@ -1,6 +1,15 @@
-import { initializeTab } from "./modules/tabExtensionStatus.js";
-import { setupContentScriptListener } from "./modules/contentScriptListener.js";
-import { setupPopupMessageListener } from "./modules/popupListener.js";
+import { 
+    initializeTab, 
+} from "./tabExtensionStatus.js";
+
+import { 
+    errorHandler 
+} from "./modules/errorHandler.js";
+
+import { 
+    handleContentScriptMessage, 
+    handlePopupMessage 
+} from "./modules/messageHandlers.js";
 
 console.log('background.js is loading...');
 
@@ -9,13 +18,14 @@ chrome.tabs.onCreated.addListener((tab) => {
     console.log(`background.js: tab ${tab.id} initialized.`)
 });
 
-setupContentScriptListener();
-setupPopupMessageListener();
-
-
-
-
-
-
-
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log(`background.js: message received from ${JSON.stringify(sender, null, 2)}`);    
+    if (!sender.tab) {
+        handlePopupMessage(message, sender, sendResponse);
+    } else {
+        handleContentScriptMessage(message, sender, sendResponse);
+    }
+    //keep connection open: allows you to call sendResponse async
+    return true;
+});
 

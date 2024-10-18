@@ -1,14 +1,13 @@
 console.log('tabExtensionStatus.js is loading...');
 
-
 const tabRecordingStatus = {};
 const tabPlaybackStatus = {};
 
 export function initializeTab(tabId) {
     tabRecordingStatus[tabId] = false;
     tabPlaybackStatus[tabId] = false;
-    console.log(`InitializeTab: Recording status of ${tabId} is ${tabRecordingStatus[tabId]}`);
-    console.log(`InitializeTab: Playback status of ${tabId} is ${tabPlaybackStatus[tabId]}`);
+    console.log(`initializeTab: Recording status of ${tabId} is ${tabRecordingStatus[tabId]}`);
+    console.log(`initializeTab: Playback status of ${tabId} is ${tabPlaybackStatus[tabId]}`);
 }
 
 export function isPlaying(tabId) {

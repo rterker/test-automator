@@ -1,128 +1,62 @@
-console.log('Popup.js is loading...');
+console.log('popup.js is loading...');
 
 const recordButton = document.getElementById('record-button');
 const playbackButton = document.getElementById('playback-button');
 
-// const addRecordingListener = initializeRecordListener();
-// const addPlaybackListener = initializePlaybackListener();
-
-// addPlaybackListener();
-// addRecordingListener();
-
-// function initializeRecordListener() {
-//     let recording = false;
-
-//     return () => {
-//         recordButton.addEventListener('click', (event) => {
-//             console.log(`Recording? ${recording}`);
-//             if (!recording) {
-//                 chrome.runtime.sendMessage('start-recording', (response) => {
-            
-//                 });
-//             } else {
-//                 chrome.runtime.sendMessage('stop-recording', (response) => {
-            
-//                 });
-//             }
-//             recording = !recording;
-//         });
-//     }
-
-// }
-
-// (() => {
-//     let recording = false;
-//     recordButton.addEventListener('click', (event) => {
-//         console.log(`Recording? ${recording}`);
-//         if (!recording) {
-//             chrome.runtime.sendMessage('start-recording', (response) => {
-        
-//             });
-//         } else {
-//             chrome.runtime.sendMessage('stop-recording', (response) => {
-        
-//             });
-//         }
-//         recording = !recording;
-//     });
-// })();
-
-
-// function initializePlaybackListener() {
-//     let playing = false;
-
-//     return () => {
-//         playbackButton.addEventListener('click', (event) => {
-//             console.log(`Playing? ${playing}`);
-//             if (!playing) {
-//                 chrome.runtime.sendMessage('start-playback', (response) => {
-            
-//                 });
-//             } else {
-//                 chrome.runtime.sendMessage('stop-playback', (response) => {
-            
-//                 });
-//             }
-//             playing = !playing;
-//         });
-//     }
-// }
-
-// (() => {
-//     let playing = false;
-//     playbackButton.addEventListener('click', (event) => {
-//         console.log(`Playing? ${playing}`);
-//         if (!playing) {
-//             chrome.runtime.sendMessage('start-playback', (response) => {
-        
-//             });
-//         } else {
-//             chrome.runtime.sendMessage('stop-playback', (response) => {
-        
-//             });
-//         }
-//         playing = !playing;
-//     });
-// })();
-
+function errorHandler(file, location, error) {
+    return console.log(`${file}: error occured in ${location}: ${error}`);
+  }
 
 recordButton.addEventListener('click', (event) => {
-    console.log(`popup.js: recordButton 'click' listener being added.`);
-    new Promise((resolve, reject) => {
-        chrome.runtime.sendMessage('get-recording-status', (response) => {
-            console.log(`popup.js: response received for get-recording-status message.`);
-            if (response.isRecording) {
-                resolve(true);
-            } else if (!response.isRecording) {
-                resolve(false);
-            } else {
-                reject(runtime.lastError);
-            }
-        });
-    })
-    .then((recordingStatus) => {
-        console.log(`popup.js: recordButton listener => recording? ${recordingStatus}`); 
-        if (recordingStatus === false) {
+    chrome.runtime.sendMessage('get-recording-status', (response) => {
+        console.log(`popup.js: response received for get-recording-status message.`);
+        const recording = response.isRecording;
+        console.log(`popup.js: recordButton listener => recording in tab ${response.tabId}? ${recording}`); 
+        if (!recording) {
             chrome.runtime.sendMessage('start-recording', (response) => {
-    
-    
+                if (response.runtime.lastError) {
+                    errorHandler('popup.js', 'recordButton', response.runtime.lastError);
+                } else {
+                    console.log(`popup.js: recording started for tab: ${response.tabId}`);
+                }
             });
-        } else if (recordingStatus === true) {
+        } else if (recording) {
             chrome.runtime.sendMessage('stop-recording', (response) => {
-    
+                if (response.runtime.lastError) {
+                    errorHandler('popup.js', 'recordButton', response.runtime.lastError);
+                } else {
+                    console.log(`popup.js: recording stopped for tab: ${response.tabId}`);
+                }
             });
+        } else {
+            console.log(`popup.js: error occured in recordButton event listener: ${runtime.lastError}`);
         }
-    })
-    .catch((err) => {
-        console.log(`Error occured in recordButton event listener: ${err}`);
     });
-
 });
-
-
 
 playbackButton.addEventListener('click', (event) => {
     chrome.runtime.sendMessage('get-playback-status', (response) => {
-
+        console.log(`popup.js: response received for get-playback-status message.`);
+        const playing = response.isPlaying;
+        console.log(`popup.js: playbackbutton listener => playing in tab ${response.tabId}? ${playing}`); 
+        if (!playing) {
+            chrome.runtime.sendMessage('start-playing', (response) => {
+                if (response.runtime.lastError) {
+                    errorHandler('popup.js', 'playbackButton', response.runtime.lastError);
+                } else {
+                    console.log(`popup.js: playback started for tab: ${response.tabId}`);
+                }
+            });
+        } else if (playing) {
+            chrome.runtime.sendMessage('stop-playing', (response) => {
+                if (response.runtime.lastError) {
+                    errorHandler('popup.js', 'playbackButton', response.runtime.lastError);
+                } else {
+                    console.log(`popup.js: playback stopped for tab: ${response.tabId}`);
+                }
+            });
+        } else {
+            errorHandler('popup.js', 'playbackButton', response.runtime.lastError);
+        }
     });
 });
