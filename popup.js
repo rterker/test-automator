@@ -14,16 +14,18 @@ recordButton.addEventListener('click', (event) => {
         console.log(`popup.js: recordButton listener => recording in tab ${response.tabId}? ${recording}`); 
         if (!recording) {
             chrome.runtime.sendMessage('start-recording', (response) => {
-                if (response.runtime.lastError) {
-                    errorHandler('popup.js', 'recordButton', response.runtime.lastError);
+                const error = runtime.lastError;
+                if (error) {
+                    errorHandler('popup.js', 'recordButton', error);
                 } else {
                     console.log(`popup.js: recording started for tab: ${response.tabId}`);
                 }
             });
         } else if (recording) {
-            chrome.runtime.sendMessage('stop-recording', (response) => {
-                if (response.runtime.lastError) {
-                    errorHandler('popup.js', 'recordButton', response.runtime.lastError);
+            chrome.runtime.sendMessage('stop-recording', (response) => {;
+                const error = runtime.lastError;
+                if (error) {
+                    errorHandler('popup.js', 'recordButton', error);
                 } else {
                     console.log(`popup.js: recording stopped for tab: ${response.tabId}`);
                 }
@@ -41,22 +43,24 @@ playbackButton.addEventListener('click', (event) => {
         console.log(`popup.js: playbackbutton listener => playing in tab ${response.tabId}? ${playing}`); 
         if (!playing) {
             chrome.runtime.sendMessage('start-playing', (response) => {
-                if (response.runtime.lastError) {
-                    errorHandler('popup.js', 'playbackButton', response.runtime.lastError);
+                const error = runtime.lastError;
+                if (error) {
+                    errorHandler('popup.js', 'playbackButton', error);
                 } else {
                     console.log(`popup.js: playback started for tab: ${response.tabId}`);
                 }
             });
         } else if (playing) {
             chrome.runtime.sendMessage('stop-playing', (response) => {
-                if (response.runtime.lastError) {
-                    errorHandler('popup.js', 'playbackButton', response.runtime.lastError);
+                const error = runtime.lastError;
+                if (error) {
+                    errorHandler('popup.js', 'playbackButton', error);
                 } else {
                     console.log(`popup.js: playback stopped for tab: ${response.tabId}`);
                 }
             });
         } else {
-            errorHandler('popup.js', 'playbackButton', response.runtime.lastError);
+            errorHandler('popup.js', 'playbackButton', runtime.lastError);
         }
     });
 });
