@@ -3,12 +3,13 @@ console.log('content-script.js is loading...');
 let tabUrl;
 let tabId;
 
-chrome.runtime.sendMessage('get-tab-info', ({ tabUrl, tabId }) => {
+//tabUrl and tabId are assigned asynchronously here, so there could be an issue, since the listener handlers use these values
+chrome.runtime.sendMessage('get-tab-info', (response) => {
     console.log(`Context script tab info:`);
-    console.log(`tabId: ${tabId}`);
-    console.log(`tabUrl: ${tabUrl}`);
-    tabUrl = tabUrl;
-    tabId = tabId;
+    console.log(`tabId: ${response.tabId}`);
+    console.log(`tabUrl: ${response.tabUrl}`);
+    tabUrl = response.tabUrl;
+    tabId = response.tabId;
 });
 
 chrome.runtime.sendMessage('is-recording-already-enabled', (response) => {
