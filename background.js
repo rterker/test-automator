@@ -10,13 +10,14 @@ chrome.tabs.onCreated.addListener((tab) => {
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log(`background.js: message received from ${JSON.stringify(sender, null, 2)}`);    
+    // console.log(`background.js: message received from ${JSON.stringify(sender, null, 2)}`);    
     if (!sender.tab) {
         handlePopupMessage(message, sender, sendResponse);
         //keep connection open: allows you to call sendResponse async
         return true;
     } else {
-        handleContentScriptMessage(message, sender, sendResponse);
+        //returning here so that true can be returned when sendResponse needs to respond asynchronously
+        return handleContentScriptMessage(message, sender, sendResponse);
     }
 });
 

@@ -1,6 +1,15 @@
 console.log('content-script.js is loading...');
 
-let tabUrl = window.location.href;
+let tabUrl;
+let tabId;
+
+chrome.runtime.sendMessage('get-tab-info', ({ tabUrl, tabId }) => {
+    console.log(`Context script tab info:`);
+    console.log(`tabId: ${tabId}`);
+    console.log(`tabUrl: ${tabUrl}`);
+    tabUrl = tabUrl;
+    tabId = tabId;
+});
 
 chrome.runtime.sendMessage('is-recording-already-enabled', (response) => {
     if (response === 'recording-enabled') {
@@ -19,14 +28,11 @@ const listeners = [
         handler: async function (event) {
             let x = event.clientX;
             let y = event.clientY;
-            let target = event.target;
             let time = Date.now();
         
-            const response = await chrome.runtime.sendMessage({ action: 'mousemove', x, y, tabUrl, target, time });
-            ({ x, y, tabUrl, time } = response);
-            console.log(`Location of mouse is x-axis: ${x}, y-axis: ${y} @ ${time} `);
-            console.log(`Url is ${tabUrl}`);
-            console.log(`Mouse move target is ${target}`);
+            const response = await chrome.runtime.sendMessage({ action: 'mousemove', tabId, tabUrl, x, y, time });
+            ({ tabId, tabUrl, x, y, time } = response);
+            console.log(`Values stored in background storage => tabId: ${tabId}, tabUrl: ${tabUrl}, x: ${x}, y: ${y}, time: ${time}`);
         }
     },
     {
