@@ -30,10 +30,20 @@ const listeners = [
             let x = event.clientX;
             let y = event.clientY;
             let time = Date.now();
-        
-            const response = await chrome.runtime.sendMessage({ action: 'mousemove', tabId, tabUrl, x, y, time });
-            ({ tabId, tabUrl, x, y, time } = response);
-            console.log(`Values stored in background storage => tabId: ${tabId}, tabUrl: ${tabUrl}, x: ${x}, y: ${y}, time: ${time}`);
+
+            const tabInfoResponse = await chrome.runtime.sendMessage('get-tab-info');
+            
+            console.log('\n');
+            console.log(`content-script.js: mousemove tab info:`);
+            console.log(`tabId: ${tabInfoResponse.tabId}`);
+            console.log(`tabUrl: ${tabInfoResponse.tabUrl}`);
+            
+            const mouseMoveResponse = await chrome.runtime.sendMessage({ action: 'mousemove', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, x, y, time });
+            ({ x, y, time } = mouseMoveResponse);
+            console.log(`Mouse moved! Values stored in background storage => tabId: ${mouseMoveResponse.tabId}, tabUrl: ${mouseMoveResponse.tabUrl}, x: ${x}, y: ${y}, time: ${time}`);
+
+            let endTime = Date.now();
+            console.log(`Round trip operation from mouse move to storage to response received back in content script: ${endTime - time} ms`);
         }
     },
     {
@@ -44,12 +54,24 @@ const listeners = [
             let y = event.clientY;
             let target = event.target;
             let time = Date.now();
-        
-            const response = await chrome.runtime.sendMessage({ action: 'click', x, y, tabUrl, target, time });
-            ({ x, y, tabUrl, target, time } = response);
-            console.log(`Mouse clicked at x-axis: ${x}, y-axis ${y} @ ${time} `);
-            console.log(`Url is ${tabUrl}`);
-            console.log(`Click target is ${target}`);
+
+            console.log('\n');
+            console.log(`In content-script.js, click target is ${target}`);
+            console.log(`Target nodeName is ${target.nodeName}`);
+            console.log(`Target nodeType is ${target.nodeType}`);
+            
+            const tabInfoResponse = await chrome.runtime.sendMessage('get-tab-info');
+            
+            console.log(`content-script.js: mousemove tab info:`);
+            console.log(`tabId: ${tabInfoResponse.tabId}`);
+            console.log(`tabUrl: ${tabInfoResponse.tabUrl}`);
+            
+            const mouseClickResponse = await chrome.runtime.sendMessage({ action: 'click', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, x, y, target, time });
+            ({ x, y, target, time } = mouseClickResponse);
+            console.log(`Mouse clicked! Values stored in background storage => tabId: ${mouseClickResponse.tabId}, tabUrl: ${mouseClickResponse.tabUrl}, x: ${x}, y: ${y}, time: ${time}, target: ${target}`);
+            
+            let endTime = Date.now();
+            console.log(`Round trip operation from mouse click to storage to response received back in content script: ${endTime - time} ms`);
         }
     },
 ];
