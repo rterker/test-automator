@@ -57,8 +57,8 @@ const listeners = [
 
             console.log('\n');
             console.log(`In content-script.js, click target is ${target}`);
-            const cssSelector = generateCssSelector(target);
-            console.log('cssSelector for clicked target:', cssSelector)
+            let targetCssSelector = generateCssSelector(target);
+            console.log('cssSelector for clicked target:', targetCssSelector)
             
             const tabInfoResponse = await chrome.runtime.sendMessage('get-tab-info');
             
@@ -66,9 +66,9 @@ const listeners = [
             console.log(`tabId: ${tabInfoResponse.tabId}`);
             console.log(`tabUrl: ${tabInfoResponse.tabUrl}`);
             
-            const mouseClickResponse = await chrome.runtime.sendMessage({ action: 'click', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, x, y, target, time });
-            ({ x, y, target, time } = mouseClickResponse);
-            console.log(`Mouse clicked! Values stored in background storage => tabId: ${mouseClickResponse.tabId}, tabUrl: ${mouseClickResponse.tabUrl}, x: ${x}, y: ${y}, time: ${time}, target: ${target}`);
+            const mouseClickResponse = await chrome.runtime.sendMessage({ action: 'click', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, x, y, targetCssSelector, time });
+            ({ x, y, targetCssSelector, time } = mouseClickResponse);
+            console.log(`Mouse clicked! Values stored in background storage => tabId: ${mouseClickResponse.tabId}, tabUrl: ${mouseClickResponse.tabUrl}, x: ${x}, y: ${y}, time: ${time}, targetCssSelector: ${targetCssSelector}`);
             
             let endTime = Date.now();
             console.log(`Round trip operation from mouse click to storage to response received back in content script: ${endTime - time} ms`);

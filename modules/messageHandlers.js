@@ -86,7 +86,7 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
 }
 
 function handleMouseEventMessages(message, sender, sendResponse) {
-  const { tabId, tabUrl, x, y, time } = message;
+  const { tabId, tabUrl, x, y, targetCssSelector, time } = message;
 
   if (message.action === 'mousemove') {
     const entry = { tabId, tabUrl, x, y, time };
@@ -94,21 +94,19 @@ function handleMouseEventMessages(message, sender, sendResponse) {
       return chrome.storage.session.get(["tabId", "tabUrl", "x", "y", "time"]);
     })
     .then(({ tabId, tabUrl, x, y, time }) => {
-      console.log(`Values set in storage => tabId: ${tabId}, tabUrl: ${tabUrl}, x: ${x}, y: ${y}, time: ${time}`);
+      console.log(`Mousemove values set in storage => tabId: ${tabId}, tabUrl: ${tabUrl}, x: ${x}, y: ${y}, time: ${time}`);
       sendResponse({ tabId, tabUrl, x, y, time });
     });   
   }
 
   if (message.action === 'click') {
-    let entry = { tabId, tabUrl, x, y, time };
-    const target = JSON.stringify(message.target);
-    entry = { ...entry, target }
+    let entry = { tabId, tabUrl, x, y, targetCssSelector, time };
     chrome.storage.session.set(entry).then(() => {
-      return chrome.storage.session.get(["tabId", "tabUrl", "x", "y", "time", "target"]);
+      return chrome.storage.session.get(["tabId", "tabUrl", "x", "y", "targetCssSelector", "time"]);
     })
-    .then(({ tabId, tabUrl, x, y, target, time }) => {
-      console.log(`Values set in storage => tabId: ${tabId}, tabUrl: ${tabUrl}, x: ${x}, y: ${y}, time: ${time}, target: ${target}`);
-      sendResponse({ tabId, tabUrl, x, y, target, time });
+    .then(({ tabId, tabUrl, x, y, targetCssSelector, time }) => {
+      console.log(`Mouse click values set in storage => tabId: ${tabId}, tabUrl: ${tabUrl}, x: ${x}, y: ${y}, time: ${time}, targetCssSelector: ${targetCssSelector}`);
+      sendResponse({ tabId, tabUrl, x, y, targetCssSelector, time });
     });  
   }
   //handle sendResponse for mousemove event asynchronously
