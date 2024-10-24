@@ -39,8 +39,8 @@ const listeners = [
             // console.log(`tabUrl: ${tabInfoResponse.tabUrl}`);
             
             const mouseMoveResponse = await chrome.runtime.sendMessage({ action: 'mousemove', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, x, y, time });
-            ({ x, y, time } = mouseMoveResponse);
-            // console.log(`Mouse moved! Values stored in background storage => tabId: ${mouseMoveResponse.tabId}, tabUrl: ${mouseMoveResponse.tabUrl}, x: ${x}, y: ${y}, time: ${time}`);
+            ({ x, y, interval, time } = mouseMoveResponse);
+            // console.log(`Mouse moved! Values stored in background storage => tabId: ${mouseMoveResponse.tabId}, tabUrl: ${mouseMoveResponse.tabUrl}, x: ${x}, y: ${y}, interval: ${interval}`);
 
             let endTime = Date.now();
             // console.log(`Round trip operation from mouse move to storage to response received back in content script: ${endTime - time} ms`);
@@ -67,8 +67,9 @@ const listeners = [
             console.log(`tabUrl: ${tabInfoResponse.tabUrl}`);
             
             const mouseClickResponse = await chrome.runtime.sendMessage({ action: 'click', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, x, y, targetCssSelector, time });
-            ({ x, y, targetCssSelector, time } = mouseClickResponse);
-            console.log(`Mouse clicked! Values stored in background storage => tabId: ${mouseClickResponse.tabId}, tabUrl: ${mouseClickResponse.tabUrl}, x: ${x}, y: ${y}, time: ${time}, targetCssSelector: ${targetCssSelector}`);
+            //currently not being sent back targetCssSelector
+            ({ x, y, interval, time } = mouseClickResponse);
+            console.log(`Mouse clicked! Values stored in background storage => tabId: ${mouseClickResponse.tabId}, tabUrl: ${mouseClickResponse.tabUrl}, x: ${x}, y: ${y}, interval: ${interval}`);
             
             let endTime = Date.now();
             console.log(`Round trip operation from mouse click to storage to response received back in content script: ${endTime - time} ms`);

@@ -3,11 +3,15 @@ import {
   isRecording, 
   togglePlayback, 
   toggleRecording
-} from "./tabExtensionStatus.js";
+} from "./tabStatus.js";
+
+import {
+  initializeRecordingTimer,
+  getRecordingId
+} from "./recordingStatus.js";
 
 import { 
-  storeMousemove, 
-  storeMouseClick 
+  storeMouseEvent
 } from "./storage.js";
 
 export function handlePopupMessage(message, sender, sendResponse) {
@@ -37,6 +41,7 @@ export function handlePopupMessage(message, sender, sendResponse) {
         if (response.message === 'content-script-recording-started') {
             //toggle and save current recording status in background
             toggleRecording(response.tabId);
+            initializeRecordingTimer();
         } else {
           response.message = runtime.lastError;
           console.log(`messageHandlers.js: error message received from content-script when attempting to start-recording`);
@@ -61,10 +66,11 @@ export function handlePopupMessage(message, sender, sendResponse) {
       });
     }
     if (message === 'start-playback') {
-  
+      // grab the playback using some sort of id
+      // generate mouseEvents to playback
     }
     if (message === 'stop-playback') {
-  
+      // stop the current playback using some sort of id
     }
   });
 }
@@ -79,47 +85,42 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
     console.log('messageHandlers.js: sending tab info to content script on initialization: ');
     console.log(`messageHandlers.js: tabId => ${tabId}`);
     console.log(`messageHandlers.js: tabUrl => ${tabUrl}`);
-    sendResponse({ tabId, tabUrl });
+    return sendResponse({ tabId, tabUrl });
   }
   
+  //this is important b/c it covers cases where we are still in the same tab, but the window content changed, e.g. following a link
   if (message === 'is-recording-already-enabled') {
     console.log(`messageHandlers.js: checking if recording already enabled for tabId: ${tabId}`);
     const recording = isRecording(tabId);
+
+    let response;
     if (recording) {
-        sendResponse('recording-enabled');
+        response = 'recording-enabled';
     } else if (!recording) {
-        sendResponse('recording-disabled');
+        response = 'recording-disabled';
     }
+    return sendResponse(response);
   }
-  if (message.action === 'mousemove' || message.action === 'click') {
-    return handleMouseEventMessages(message, sender, sendResponse);
-  }
+
+  if (isRecording(tabId)) {
+    return handleRecording(message, sender, sendResponse);
+  } 
 }
 
-function handleMouseEventMessages(message, sender, sendResponse) {
-  const { tabId, tabUrl, x, y, targetCssSelector, time } = message;
+function handleRecording(message, sender, sendResponse) {
+  const recordingId = getRecordingId();
 
-  if (message.action === 'mousemove') {
-    const entry = { tabId, tabUrl, x, y, time };
-    storeMousemove(entry, sendResponse);
-  }
-
-  if (message.action === 'click') {
-    let entry = { tabId, tabUrl, x, y, targetCssSelector, time };
-    storeMouseClick(entry, sendResponse);
-  }
-  //handle sendResponse for mousemove event asynchronously
+  storeMouseEvent(recordingId, message, sendResponse);
+  //handle sendResponse for recording events asynchronously, as the storage api is async
   return true;   
 };
 
-//mouse moves: 
-//  x,y for distance
-//  start, end times for movement
+//for all playback:
 //  tabId to check that the playback will be for the correct tab
-//  url
+//  url to check that the playback will be for the correct url
+//  start time of first action
+//  generate a unique id
+//  TODO LATER: we will have the user input more id info, like title and description
 
-//mouse clicks
-//  x,y for location of click
-//  event target for click target
-//  tabId to check that the playback will be for the correct tab
-//  url
+
+

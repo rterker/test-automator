@@ -1,4 +1,4 @@
-import { initializeTab } from "./modules/tabExtensionStatus.js";
+import { initializeTab } from "./modules/tabStatus.js";
 import { errorHandler } from "./modules/errorHandler.js";
 import { handleContentScriptMessage, handlePopupMessage } from "./modules/messageHandlers.js";
 

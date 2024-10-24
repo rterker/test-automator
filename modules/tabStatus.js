@@ -1,4 +1,4 @@
-console.log('tabExtensionStatus.js is loading...');
+console.log('tabStatus.js is loading...');
 
 const tabRecordingStatus = {};
 const tabPlaybackStatus = {};
