@@ -5,6 +5,11 @@ import {
   toggleRecording
 } from "./tabExtensionStatus.js";
 
+import { 
+  storeMousemove, 
+  storeMouseClick 
+} from "./storage.js";
+
 export function handlePopupMessage(message, sender, sendResponse) {
   // console.log(`messageHandlers.js: popupMessage message received from ${JSON.stringify(sender, null, 2)}`);
   //getting current tab this way since messages from popup don't contain it
@@ -20,17 +25,21 @@ export function handlePopupMessage(message, sender, sendResponse) {
     if (message === 'get-playback-status') {
       console.log(`popupMessage: get-playback-status message received.`);
       const playing = isPlaying(tabId);
+      const recording = isRecording(tabId);
       console.log(`popupMessage: playing status is ${playing}.`);
-      sendResponse({ tabId: tabId, isPlaying: playing });
+      console.log(`popupMessage: recording status is ${recording}.`);
+      sendResponse({ tabId: tabId, isPlaying: playing, isRecording: recording });
     }
     if (message === 'start-recording') {
       //message sent to content-script
-      //TODO: error handling here
       chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'start-recording' }, (response) => {
         // console.log(`popupMessage: response from start-recording message sent to content-script: ${JSON.stringify(response, null, 2)}`);
         if (response.message === 'content-script-recording-started') {
             //toggle and save current recording status in background
             toggleRecording(response.tabId);
+        } else {
+          response.message = runtime.lastError;
+          console.log(`messageHandlers.js: error message received from content-script when attempting to start-recording`);
         }
         //response sent to popup.js
         sendResponse({ tabId: response.tabId, message: response.message });
@@ -38,13 +47,15 @@ export function handlePopupMessage(message, sender, sendResponse) {
     }
     if (message === 'stop-recording') {
       //message sent to content-script
-      //TODO: error handling here
       chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'stop-recording' }, (response) => {
         // console.log(`popupMessage: response from stop-recording message sent to content-script: ${JSON.stringify(response, null, 2)}`);
         if (response.message === 'content-script-recording-stopped') {
             //toggle and save current recording status in background
             toggleRecording(response.tabId);
-        }
+          } else {
+            response.message = runtime.lastError;
+            console.log(`messageHandlers.js: error message received from content-script when attempting to stop-recording`);
+          }
         //response sent to popup.js
         sendResponse({ tabId: response.tabId, message: response.message });
       });
@@ -90,24 +101,12 @@ function handleMouseEventMessages(message, sender, sendResponse) {
 
   if (message.action === 'mousemove') {
     const entry = { tabId, tabUrl, x, y, time };
-    chrome.storage.session.set(entry).then(() => {
-      return chrome.storage.session.get(["tabId", "tabUrl", "x", "y", "time"]);
-    })
-    .then(({ tabId, tabUrl, x, y, time }) => {
-      console.log(`Mousemove values set in storage => tabId: ${tabId}, tabUrl: ${tabUrl}, x: ${x}, y: ${y}, time: ${time}`);
-      sendResponse({ tabId, tabUrl, x, y, time });
-    });   
+    storeMousemove(entry, sendResponse);
   }
 
   if (message.action === 'click') {
     let entry = { tabId, tabUrl, x, y, targetCssSelector, time };
-    chrome.storage.session.set(entry).then(() => {
-      return chrome.storage.session.get(["tabId", "tabUrl", "x", "y", "targetCssSelector", "time"]);
-    })
-    .then(({ tabId, tabUrl, x, y, targetCssSelector, time }) => {
-      console.log(`Mouse click values set in storage => tabId: ${tabId}, tabUrl: ${tabUrl}, x: ${x}, y: ${y}, time: ${time}, targetCssSelector: ${targetCssSelector}`);
-      sendResponse({ tabId, tabUrl, x, y, targetCssSelector, time });
-    });  
+    storeMouseClick(entry, sendResponse);
   }
   //handle sendResponse for mousemove event asynchronously
   return true;   

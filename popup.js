@@ -40,7 +40,14 @@ playbackButton.addEventListener('click', (event) => {
     chrome.runtime.sendMessage('get-playback-status', (response) => {
         console.log(`popup.js: response received for get-playback-status message.`);
         const playing = response.isPlaying;
+        const recording = response.isRecording;
         console.log(`popup.js: playbackbutton listener => playing in tab ${response.tabId}? ${playing}`); 
+        console.log(`popup.js: playbackbutton listener => recording in tab ${response.tabId}? ${recording}`); 
+
+        if (recording) {
+            return alert('Recording in progress. Please end recording before attempting to plackback.');
+        }
+
         if (!playing) {
             chrome.runtime.sendMessage('start-playing', (response) => {
                 const error = runtime.lastError;

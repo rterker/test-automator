@@ -102,6 +102,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         alert(`content-script.js: recording stopped on tab ${message.tabId}`);
         sendResponse({ tabId: message.tabId, message: 'content-script-recording-stopped'});
     }
+    if (message.action === 'start-playback') {
+
+    }
+    if (message.action === 'stop-playback') {
+
+    }
 });
 
 
@@ -155,3 +161,27 @@ function generateCssSelector(target) {
     return path.join(' > ');
 }
 
+function moveMouse(x, y) {
+    const moveEvent = new MouseEvent('mousemove', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        clientX: x,    // required - x coordinate relative to viewport
+        clientY: y     // required - y coordinate relative to viewport
+    });
+    const element = document.elementFromPoint(x, y);
+    element.dispatchEvent(moveEvent);
+}
+
+function clickMouseLeft(x, y) {
+    const clickEvent = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        clientX: x,    // required - x coordinate relative to viewport
+        clientY: y,    // required - y coordinate relative to viewport
+        button: 0      // 0=left, 1=middle, 2=right
+    });
+    const element = document.elementFromPoint(x, y);
+    element.dispatchEvent(clickEvent);
+}
