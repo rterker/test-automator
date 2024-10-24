@@ -11,7 +11,8 @@ import {
 } from "./recordingStatus.js";
 
 import { 
-  storeMouseEvent
+  storeMouseEvent,
+  getPlaybackObject
 } from "./storage.js";
 
 export function handlePopupMessage(message, sender, sendResponse) {
@@ -22,9 +23,11 @@ export function handlePopupMessage(message, sender, sendResponse) {
     console.log(`popupMessage: current tabId is ${tabId}`);
     if (message === 'get-recording-status') {
       console.log(`popupMessage: get-recording-status message received.`);
+      const playing = isPlaying(tabId);
       const recording = isRecording(tabId);
+      console.log(`popupMessage: playing status is ${playing}.`);
       console.log(`popupMessage: recording status is ${recording}.`);
-      sendResponse({ tabId: tabId, isRecording: recording });
+      sendResponse({ tabId: tabId, isPlaying: playing, isRecording: recording });
     }
     if (message === 'get-playback-status') {
       console.log(`popupMessage: get-playback-status message received.`);
@@ -43,10 +46,10 @@ export function handlePopupMessage(message, sender, sendResponse) {
             toggleRecording(response.tabId);
             initializeRecordingTimer();
         } else {
-          response.message = runtime.lastError;
+          response.message = chrome.runtime.lastError;
           console.log(`messageHandlers.js: error message received from content-script when attempting to start-recording`);
         }
-        //response sent to popup.js
+        //response sent to popup.js - not doing anything with message in popup currently
         sendResponse({ tabId: response.tabId, message: response.message });
       });
     }
@@ -58,19 +61,48 @@ export function handlePopupMessage(message, sender, sendResponse) {
             //toggle and save current recording status in background
             toggleRecording(response.tabId);
           } else {
-            response.message = runtime.lastError;
+            response.message = chrome.runtime.lastError;
             console.log(`messageHandlers.js: error message received from content-script when attempting to stop-recording`);
           }
-        //response sent to popup.js
+        //response sent to popup.js - not doing anything with message in popup currently
         sendResponse({ tabId: response.tabId, message: response.message });
       });
     }
     if (message === 'start-playback') {
-      // grab the playback using some sort of id
-      // generate mouseEvents to playback
+      //TODO: actually pass in a real recording id here, not jhust test
+      getPlaybackObject('test')
+      .then((playbackObject) => {
+        console.log('messageHandlers.js: playbackObject => ', playbackObject);
+        //message sent to content-script
+        chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'start-playback', playbackObject }, (response) => {
+         if (response.message === 'content-script-playback-started') {
+           //toggle and save current playback status in background
+           togglePlayback(response.tabId);
+         } else {
+           response.message = chrome.runtime.lastError;
+           console.log(`messageHandlers.js: error message received from content-script when attempting to start-playback`);
+         }
+         //response sent to popup.js - not doing anything with message in popup currently
+         sendResponse({ tabId: response.tabId, message: response.message });
+       });
+      })
+      .catch((err) => {
+        console.error(`Error when attempting to retrieve playbackObject: ${err}. start-playback message was not sent to content-script.js`);
+      });
     }
     if (message === 'stop-playback') {
       // stop the current playback using some sort of id
+      chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'stop-playback' }, (response) => {
+        if (response.message === 'content-script-playback-stopped') {
+          //toggle and save current playback status in background
+          togglePlayback(response.tabId);
+        } else {
+          response.message = chrome.runtime.lastError;
+          console.log(`messageHandlers.js: error message received from content-script when attempting to stop-playback`);
+        }
+        //response sent to popup.js - not doing anything with message in popup currently
+        sendResponse({ tabId: response.tabId, message: response.message });
+      });
     }
   });
 }
@@ -89,6 +121,7 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
   }
   
   //this is important b/c it covers cases where we are still in the same tab, but the window content changed, e.g. following a link
+  //TODO: isRecording returns undefined here when you refresh the page instead of starting a new tab
   if (message === 'is-recording-already-enabled') {
     console.log(`messageHandlers.js: checking if recording already enabled for tabId: ${tabId}`);
     const recording = isRecording(tabId);
@@ -103,11 +136,11 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
   }
 
   if (isRecording(tabId)) {
-    return handleRecording(message, sender, sendResponse);
+    return handleRecordingEvents(message, sender, sendResponse);
   } 
 }
 
-function handleRecording(message, sender, sendResponse) {
+function handleRecordingEvents(message, sender, sendResponse) {
   const recordingId = getRecordingId();
 
   storeMouseEvent(recordingId, message, sendResponse);
@@ -118,7 +151,6 @@ function handleRecording(message, sender, sendResponse) {
 //for all playback:
 //  tabId to check that the playback will be for the correct tab
 //  url to check that the playback will be for the correct url
-//  start time of first action
 //  generate a unique id
 //  TODO LATER: we will have the user input more id info, like title and description
 

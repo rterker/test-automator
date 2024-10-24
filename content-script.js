@@ -103,11 +103,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         alert(`content-script.js: recording stopped on tab ${message.tabId}`);
         sendResponse({ tabId: message.tabId, message: 'content-script-recording-stopped'});
     }
+    //TODO: actually handle playback here
     if (message.action === 'start-playback') {
-
+        //get storage object from background and feed into generateMouseEvent
+        console.log(`content-script.js: playbackObject => ${message.playbackObject}`);
+        alert(`content-script.js: playback started on tab ${message.tabId}`);
+        sendResponse({ tabId: message.tabId, message: 'content-script-playback-started'});
     }
     if (message.action === 'stop-playback') {
-
+        alert(`content-script.js: playback stopped on tab ${message.tabId}`);
+        sendResponse({ tabId: message.tabId, message: 'content-script-playback-stopped'});
     }
 });
 
@@ -185,4 +190,8 @@ function clickMouseLeft(x, y) {
     });
     const element = document.elementFromPoint(x, y);
     element.dispatchEvent(clickEvent);
+}
+
+function generateMouseEvent() {
+
 }

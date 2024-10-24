@@ -41,6 +41,18 @@ export function storeMouseEvent(recordingId, message, sendResponse) {
   });
 }
 
+export function getPlaybackObject(recordingId) {
+  return new Promise((resolve, reject) => {
+    chrome.storage.session.get([recordingId], function(data){
+      if (chrome.runtime.lastError) {
+        return reject(chrome.runtime.lastError);
+      }
+      const response = JSON.stringify(data);
+      return resolve(response);
+    });
+  });
+}
+
 
 //mouse moves: 
 //  x,y for distance
