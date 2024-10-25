@@ -22,13 +22,18 @@ export function isRecording(tabId) {
 
 export function toggleRecording(tabId) {
     const toggledStatus = tabRecordingStatus[tabId] = !tabRecordingStatus[tabId];
-    console.log(`toggleExtension: Recording status of ${tabId} is now ${toggledStatus}`);
+    console.log(`toggleRecording: Recording status of ${tabId} is now ${toggledStatus}`);
     return toggledStatus;
 }
 
 export function togglePlayback(tabId) {
     const toggledStatus = tabPlaybackStatus[tabId] = !tabPlaybackStatus[tabId];
-    console.log(`toggleExtension: Playback status of ${tabId} is now ${toggledStatus}`);
+    console.log(`togglePlayback: Playback status of ${tabId} is now ${toggledStatus}`);
     return toggledStatus;
+}
+
+export function setPlaybackStatus(tabId, status) {
+    tabPlaybackStatus[tabId] = status;
+    console.log(`setPlaybackStatus: Playback status of ${tabId} set to ${status}`);
 }
 

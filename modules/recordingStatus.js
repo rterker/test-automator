@@ -13,7 +13,6 @@ export function initializeRecordingTimer() {
     startTime: now,
     tracker: now
   };
-  console.log(`initizlieRecordingTimer: time => ${JSON.stringify(timer)}`);
   return timer[recordingId].intervalTime;
 }
 
@@ -24,6 +23,5 @@ export function getRecordingId() {
 export function incrementAndGetTime(recordingId, newTime) {
   timer[recordingId].intervalTime = newTime - timer[recordingId].tracker;
   timer[recordingId].tracker = newTime;
-  console.log(`incrementAndGetTime: time => ${JSON.stringify(timer)}`);
   return timer[recordingId].intervalTime;
 }

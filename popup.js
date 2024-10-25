@@ -43,6 +43,7 @@ recordButton.addEventListener('click', (event) => {
     });
 });
 
+//TODO: check on playback click whether the starting url is the same as the starting url for the recording. if not, throw an error and don't playback
 playbackButton.addEventListener('click', (event) => {
     chrome.runtime.sendMessage('get-playback-status', (response) => {
         console.log(`popup.js: response received for get-playback-status message.`);

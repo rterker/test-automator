@@ -1,17 +1,5 @@
 console.log('content-script.js is loading...');
 
-let tabUrl;
-let tabId;
-
-//tabUrl and tabId are assigned asynchronously here, so there could be an issue, since the listener handlers use these values
-chrome.runtime.sendMessage('get-tab-info', (response) => {
-    console.log(`Context script tab info:`);
-    console.log(`tabId: ${response.tabId}`);
-    console.log(`tabUrl: ${response.tabUrl}`);
-    tabUrl = response.tabUrl;
-    tabId = response.tabId;
-});
-
 chrome.runtime.sendMessage('is-recording-already-enabled', (response) => {
     if (response === 'recording-enabled') {
         console.log(`content-script.js: content of window changed. confirmed that recording should still be enabled.`);
@@ -103,18 +91,97 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         alert(`content-script.js: recording stopped on tab ${message.tabId}`);
         sendResponse({ tabId: message.tabId, message: 'content-script-recording-stopped'});
     }
-    //TODO: actually handle playback here
     if (message.action === 'start-playback') {
-        //get storage object from background and feed into generateMouseEvent
-        console.log(`content-script.js: playbackObject => ${message.playbackObject}`);
         alert(`content-script.js: playback started on tab ${message.tabId}`);
         sendResponse({ tabId: message.tabId, message: 'content-script-playback-started'});
+        console.log(`content-script.js: playbackArray => ${JSON.stringify(message.playbackArray)}`);
+        startPlayback(message.playbackArray);
     }
     if (message.action === 'stop-playback') {
+        stopPlayback(message.tabId);
         alert(`content-script.js: playback stopped on tab ${message.tabId}`);
         sendResponse({ tabId: message.tabId, message: 'content-script-playback-stopped'});
     }
 });
+
+function startPlayback(playbackArray) {
+    const firstEvent = playbackArray[0];
+    chrome.runtime.sendMessage('get-tab-info', (response) => {
+        console.log(`Playback tabUrl: ${response.tabUrl}`);
+        if (response.tabUrl === firstEvent.tabUrl) {
+            continuePlayback(playbackArray);
+        } else {
+            chrome.runtime.sendMessage('stop-playback', (response) => {
+                if (chrome.runtime.lastError) {
+                    console.log(`startPlayback: error occured on stop-playback message from content-script => ${chrome.runtime.lastError}`);
+                } else {
+                    console.log(`startPlayback: ${response.message} occured on tab ${response.tabId}.`);
+                    alert(`Please navigate to starting url before clicking playback.`);
+                }
+            });
+        }
+    });
+}
+
+function continuePlayback(playbackArray) {
+    let totalInterval = 0;
+    for (let idx in playbackArray) {
+        const event = playbackArray[idx];
+        const interval = event.interval;
+        totalInterval += interval;
+        setTimeout(generateMouseEvent, totalInterval, event);
+        //TODO: finish handling this last call here
+        if (idx === playbackArray.length - 1) {
+            setTimeout(() => {
+                //TODO: error handling
+                chrome.runtime.sendMessage('playback-complete', (response) => {
+                    alert(`content-script.js: ${response.message} on tab ${response.tabId}`);
+                });
+            }, totalInterval + 50);
+        }
+    }
+}
+
+function generateMouseEvent(event) {
+    const { action, interval, x, y, tabUrl, tabId } = event;
+    if (action === 'mousemove') {
+        moveMouse(x, y);
+    }
+    if (action === 'click') {
+        clickMouseLeft(x, y);
+    }
+}
+
+function moveMouse(x, y) {
+    const moveEvent = new MouseEvent('mousemove', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        clientX: x,    // required - x coordinate relative to viewport
+        clientY: y     // required - y coordinate relative to viewport
+    });
+    const element = document.elementFromPoint(x, y);
+    element.dispatchEvent(moveEvent);
+}
+
+function clickMouseLeft(x, y) {
+    const clickEvent = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        clientX: x,    // required - x coordinate relative to viewport
+        clientY: y,    // required - y coordinate relative to viewport
+        button: 0      // 0=left, 1=middle, 2=right
+    });
+    const element = document.elementFromPoint(x, y);
+    element.dispatchEvent(clickEvent);
+}
+
+
+
+
+
+
 
 
 function generateCssSelector(target) {
@@ -165,33 +232,4 @@ function generateCssSelector(target) {
     }
 
     return path.join(' > ');
-}
-
-function moveMouse(x, y) {
-    const moveEvent = new MouseEvent('mousemove', {
-        bubbles: true,
-        cancelable: true,
-        view: window,
-        clientX: x,    // required - x coordinate relative to viewport
-        clientY: y     // required - y coordinate relative to viewport
-    });
-    const element = document.elementFromPoint(x, y);
-    element.dispatchEvent(moveEvent);
-}
-
-function clickMouseLeft(x, y) {
-    const clickEvent = new MouseEvent('click', {
-        bubbles: true,
-        cancelable: true,
-        view: window,
-        clientX: x,    // required - x coordinate relative to viewport
-        clientY: y,    // required - y coordinate relative to viewport
-        button: 0      // 0=left, 1=middle, 2=right
-    });
-    const element = document.elementFromPoint(x, y);
-    element.dispatchEvent(clickEvent);
-}
-
-function generateMouseEvent() {
-
 }

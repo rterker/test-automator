@@ -34,7 +34,6 @@ export function storeMouseEvent(recordingId, message, sendResponse) {
       ...currentData,
       entry
     ];
-    console.log(`storage.js: ${action} data being stored => ${ JSON.stringify({ [recordingId]: newData }) }`);
     chrome.storage.session.set({ [recordingId]: newData }, function() {
       sendResponse({ ...entry, time });
     });
@@ -47,8 +46,7 @@ export function getPlaybackObject(recordingId) {
       if (chrome.runtime.lastError) {
         return reject(chrome.runtime.lastError);
       }
-      const response = JSON.stringify(data);
-      return resolve(response);
+      return resolve(data);
     });
   });
 }

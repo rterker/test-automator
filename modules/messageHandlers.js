@@ -2,7 +2,8 @@ import {
   isPlaying, 
   isRecording, 
   togglePlayback, 
-  toggleRecording
+  toggleRecording,
+  setPlaybackStatus
 } from "./tabStatus.js";
 
 import {
@@ -69,12 +70,12 @@ export function handlePopupMessage(message, sender, sendResponse) {
       });
     }
     if (message === 'start-playback') {
-      //TODO: actually pass in a real recording id here, not jhust test
+      //TODO: actually pass in a real recording id here, not just test. this should come from input in popup
       getPlaybackObject('test')
       .then((playbackObject) => {
-        console.log('messageHandlers.js: playbackObject => ', playbackObject);
+        const playbackArray = playbackObject['test'];
         //message sent to content-script
-        chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'start-playback', playbackObject }, (response) => {
+        chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'start-playback', playbackArray }, (response) => {
          if (response.message === 'content-script-playback-started') {
            //toggle and save current playback status in background
            togglePlayback(response.tabId);
@@ -133,6 +134,16 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
         response = 'recording-disabled';
     }
     return sendResponse(response);
+  }
+
+  if (message === 'playback-complete') {
+    togglePlayback(tabId);
+    return sendResponse({ tabId, message });
+  }
+
+  if (message === 'stop-playback') {
+    setPlaybackStatus(tabId, false);
+    return sendResponse({ tabId, message });
   }
 
   if (isRecording(tabId)) {
