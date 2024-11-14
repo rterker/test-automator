@@ -1,19 +1,33 @@
-console.log('popup.js is loading...');
+const logger = {
+    log: function(message, path, type = 'INFO') {
+        const entry = {
+        time: new Date().toLocaleString(),
+        type,
+        message,
+        path
+        };
+
+        if (type === 'INFO') console.log(entry);
+        if (type === 'ERROR') console.error(entry);
+    }
+};
+
+const path = 'chrome-extension://ofgadbmdeibbpnemdmcnjchnpfpmloop/popup.js';
+const ERROR = 'ERROR';
+
+logger.log('popup.js is loading...', path);
 
 const recordButton = document.getElementById('record-button');
 const playbackButton = document.getElementById('playback-button');
 
-function errorHandler(file, location, error) {
-    return console.log(`${file}: error occured in ${location}: ${error}`);
-  }
 
 recordButton.addEventListener('click', (event) => {
     chrome.runtime.sendMessage('get-recording-status', (response) => {
-        console.log(`popup.js: response received for get-recording-status message.`);
+        logger.log(`Response received for get-recording-status message.`, path);
         const playing = response.isPlaying;
         const recording = response.isRecording;
-        console.log(`popup.js: recordButton listener => playing in tab ${response.tabId}? ${playing}`); 
-        console.log(`popup.js: recordButton listener => recording in tab ${response.tabId}? ${recording}`); 
+        logger.log(`RecordButton listener => playing in tab ${response.tabId}? ${playing}`, path); 
+        logger.log(`RecordButton listener => recording in tab ${response.tabId}? ${recording}`, path); 
 
         if (playing) {
             return alert(`Playback in progress. Please end playback before attempting to record.`);
@@ -23,22 +37,22 @@ recordButton.addEventListener('click', (event) => {
             chrome.runtime.sendMessage('start-recording', (response) => {
                 const error = chrome.runtime.lastError;
                 if (error) {
-                    errorHandler('popup.js', 'recordButton', error);
+                    logger.log(error, path, ERROR);
                 } else {
-                    console.log(`popup.js: recording started for tab: ${response.tabId}`);
+                    logger.log(`Recording started for tab: ${response.tabId}`, path);
                 }
             });
         } else if (recording) {
             chrome.runtime.sendMessage('stop-recording', (response) => {;
                 const error = chrome.runtime.lastError;
                 if (error) {
-                    errorHandler('popup.js', 'recordButton', error);
+                    logger.log(error, path, ERROR);
                 } else {
-                    console.log(`popup.js: recording stopped for tab: ${response.tabId}`);
+                    logger.log(`Recording stopped for tab: ${response.tabId}`, path);
                 }
             });
         } else {
-            console.log(`popup.js: error occured in recordButton event listener: ${chrome.runtime.lastError}`);
+            logger.log(`Error occured in recordButton event listener: ${chrome.runtime.lastError}`, path, ERROR);
         }
     });
 });
@@ -46,11 +60,11 @@ recordButton.addEventListener('click', (event) => {
 //TODO: check on playback click whether the starting url is the same as the starting url for the recording. if not, throw an error and don't playback
 playbackButton.addEventListener('click', (event) => {
     chrome.runtime.sendMessage('get-playback-status', (response) => {
-        console.log(`popup.js: response received for get-playback-status message.`);
+        logger.log(`Response received for get-playback-status message.`, path);
         const playing = response.isPlaying;
         const recording = response.isRecording;
-        console.log(`popup.js: playbackbutton listener => playing in tab ${response.tabId}? ${playing}`); 
-        console.log(`popup.js: playbackbutton listener => recording in tab ${response.tabId}? ${recording}`); 
+        logger.log(`playbackbutton listener => playing in tab ${response.tabId}? ${playing}`, path); 
+        logger.log(`playbackbutton listener => recording in tab ${response.tabId}? ${recording}`, path); 
 
         if (recording) {
             return alert('Recording in progress. Please end recording before attempting to plackback.');
@@ -60,22 +74,22 @@ playbackButton.addEventListener('click', (event) => {
             chrome.runtime.sendMessage('start-playback', (response) => {
                 const error = chrome.runtime.lastError;
                 if (error) {
-                    errorHandler('popup.js', 'playbackButton', error);
+                    logger.log(error, path, ERROR);
                 } else {
-                    console.log(`popup.js: playback started for tab: ${response.tabId}`);
+                    logger.log(`Playback started for tab: ${response.tabId}`, path);
                 }
             });
         } else if (playing) {
             chrome.runtime.sendMessage('stop-playback', (response) => {
                 const error = chrome.runtime.lastError;
                 if (error) {
-                    errorHandler('popup.js', 'playbackButton', error);
+                    logger.log(error, path, ERROR);
                 } else {
-                    console.log(`popup.js: playback stopped for tab: ${response.tabId}`);
+                    logger.log(`Playback stopped for tab: ${response.tabId}`, path);
                 }
             });
         } else {
-            errorHandler('popup.js', 'playbackButton', chrome.runtime.lastError);
+            logger.log(`Error occured in playbackButton event listener: ${chrome.runtime.lastError}`, path, ERROR);
         }
     });
 });

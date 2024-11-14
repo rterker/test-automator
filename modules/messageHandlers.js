@@ -16,26 +16,33 @@ import {
   getPlaybackObject
 } from "./storage.js";
 
+import { 
+  logger,
+  ERROR
+ } from "./logger.js";
+
+const path = import.meta.url;
+
 export function handlePopupMessage(message, sender, sendResponse) {
   // console.log(`messageHandlers.js: popupMessage message received from ${JSON.stringify(sender, null, 2)}`);
   //getting current tab this way since messages from popup don't contain it
   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
     const tabId = tabs[0].id;
-    console.log(`popupMessage: current tabId is ${tabId}`);
+    logger.log(`popupMessage: current tabId is ${tabId}`, path);
     if (message === 'get-recording-status') {
-      console.log(`popupMessage: get-recording-status message received.`);
+      logger.log(`popupMessage: get-recording-status message received.`, path);
       const playing = isPlaying(tabId);
       const recording = isRecording(tabId);
-      console.log(`popupMessage: playing status is ${playing}.`);
-      console.log(`popupMessage: recording status is ${recording}.`);
+      logger.log(`popupMessage: playing status is ${playing}.`, path);
+      logger.log(`popupMessage: recording status is ${recording}.`, path);
       sendResponse({ tabId: tabId, isPlaying: playing, isRecording: recording });
     }
     if (message === 'get-playback-status') {
-      console.log(`popupMessage: get-playback-status message received.`);
+      logger.log(`popupMessage: get-playback-status message received.`, path);
       const playing = isPlaying(tabId);
       const recording = isRecording(tabId);
-      console.log(`popupMessage: playing status is ${playing}.`);
-      console.log(`popupMessage: recording status is ${recording}.`);
+      logger.log(`popupMessage: playing status is ${playing}.`, path);
+      logger.log(`popupMessage: recording status is ${recording}.`, path);
       sendResponse({ tabId: tabId, isPlaying: playing, isRecording: recording });
     }
     if (message === 'start-recording') {
@@ -48,7 +55,7 @@ export function handlePopupMessage(message, sender, sendResponse) {
             initializeRecordingTimer();
         } else {
           response.message = chrome.runtime.lastError;
-          console.log(`messageHandlers.js: error message received from content-script when attempting to start-recording`);
+          logger.log(`messageHandlers.js: error message received from content-script when attempting to start-recording`, path, ERROR);
         }
         //response sent to popup.js - not doing anything with message in popup currently
         sendResponse({ tabId: response.tabId, message: response.message });
@@ -63,7 +70,7 @@ export function handlePopupMessage(message, sender, sendResponse) {
             toggleRecording(response.tabId);
           } else {
             response.message = chrome.runtime.lastError;
-            console.log(`messageHandlers.js: error message received from content-script when attempting to stop-recording`);
+            logger.log(`messageHandlers.js: error message received from content-script when attempting to stop-recording`, path, ERROR);
           }
         //response sent to popup.js - not doing anything with message in popup currently
         sendResponse({ tabId: response.tabId, message: response.message });
@@ -81,14 +88,14 @@ export function handlePopupMessage(message, sender, sendResponse) {
            togglePlayback(response.tabId);
          } else {
            response.message = chrome.runtime.lastError;
-           console.log(`messageHandlers.js: error message received from content-script when attempting to start-playback`);
+           logger.log(`messageHandlers.js: error message received from content-script when attempting to start-playback`, path, ERROR);
          }
          //response sent to popup.js - not doing anything with message in popup currently
          sendResponse({ tabId: response.tabId, message: response.message });
        });
       })
       .catch((err) => {
-        console.error(`Error when attempting to retrieve playbackObject: ${err}. start-playback message was not sent to content-script.js`);
+        logger.log(`Error when attempting to retrieve playbackObject: ${err}. start-playback message was not sent to content-script.js`, path, ERROR);
       });
     }
     if (message === 'stop-playback') {
@@ -99,7 +106,7 @@ export function handlePopupMessage(message, sender, sendResponse) {
           togglePlayback(response.tabId);
         } else {
           response.message = chrome.runtime.lastError;
-          console.log(`messageHandlers.js: error message received from content-script when attempting to stop-playback`);
+          logger.log(`messageHandlers.js: error message received from content-script when attempting to stop-playback`, path, ERROR);
         }
         //response sent to popup.js - not doing anything with message in popup currently
         sendResponse({ tabId: response.tabId, message: response.message });
@@ -115,16 +122,16 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
   const tabUrl = sender.tab.url;
 
   if (message === 'get-tab-info') {
-    console.log('messageHandlers.js: sending tab info to content script on initialization: ');
-    console.log(`messageHandlers.js: tabId => ${tabId}`);
-    console.log(`messageHandlers.js: tabUrl => ${tabUrl}`);
+    logger.log('messageHandlers.js: sending tab info to content script on initialization: ', path);
+    logger.log(`messageHandlers.js: tabId => ${tabId}`, path);
+    logger.log(`messageHandlers.js: tabUrl => ${tabUrl}`, path);
     return sendResponse({ tabId, tabUrl });
   }
   
   //this is important b/c it covers cases where we are still in the same tab, but the window content changed, e.g. following a link
   //TODO: isRecording returns undefined here when you refresh the page instead of starting a new tab
   if (message === 'is-recording-already-enabled') {
-    console.log(`messageHandlers.js: checking if recording already enabled for tabId: ${tabId}`);
+    logger.log(`messageHandlers.js: checking if recording already enabled for tabId: ${tabId}`, path);
     const recording = isRecording(tabId);
 
     let response;

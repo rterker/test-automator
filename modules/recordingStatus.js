@@ -1,7 +1,15 @@
 //TODO: save recordingId in a persistent location like storage api or database later on
 //TODO: increment recordingId later on. just returning 1 each time now for prototype
 //TODO: refactor this whole file later after proof of concept
-console.log('recordingStatus.js is loading...');
+
+import { 
+  logger,
+  ERROR
+} from "./logger.js";
+
+const path = import.meta.url;
+
+logger.log('recordingStatus.js is loading...', path);
 
 let recordingId = 'test';
 let timer = {};

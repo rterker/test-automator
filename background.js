@@ -1,12 +1,14 @@
 import { initializeTab } from "./modules/tabStatus.js";
-import { errorHandler } from "./modules/errorHandler.js";
 import { handleContentScriptMessage, handlePopupMessage } from "./modules/messageHandlers.js";
+import { logger } from "./modules/logger.js";
 
-console.log('background.js is loading...');
+const path = import.meta.url;
+
+logger.log('background.js is loading...', path);
 
 chrome.tabs.onCreated.addListener((tab) => {
     initializeTab(tab.id);
-    console.log(`background.js: tab ${tab.id} initialized.`)
+    logger.log(`Tab ${tab.id} initialized.`, path)
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
