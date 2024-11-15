@@ -29,12 +29,18 @@ export function storeMouseEvent(recordingId, message, sendResponse) {
   const entry = { action, tabId, tabUrl, x, y, interval };
   
   chrome.storage.session.get([recordingId], function(data){
-    const currentData = data[recordingId] || [];
+    const nextStepId = data[recordingId]?.nextStepId ?? 0;
+    console.log('data[recordingId]:', data[recordingId])
+    console.log('nextStepId:', nextStepId)
+    entry.stepId = nextStepId;
+    const currentData = data[recordingId]?.steps || [];
+    console.log('currentData:', currentData)
     const newData = [
       ...currentData,
       entry
     ];
-    chrome.storage.session.set({ [recordingId]: newData }, function() {
+    
+    chrome.storage.session.set({ [recordingId]: { nextStepId: nextStepId + 1, steps: newData } }, function() {
       sendResponse({ ...entry, time });
     });
   });
@@ -60,5 +66,3 @@ export function getPlaybackObject(recordingId) {
 //mouse clicks
 //  x,y for location of click
 //  event target for click target - when using MouseEvent this is N/A
-
-

@@ -80,7 +80,7 @@ export function handlePopupMessage(message, sender, sendResponse) {
       //TODO: actually pass in a real recording id here, not just test. this should come from input in popup
       getPlaybackObject('test')
       .then((playbackObject) => {
-        const playbackArray = playbackObject['test'];
+        const playbackArray = playbackObject['test'].steps;
         //message sent to content-script
         chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'start-playback', playbackArray }, (response) => {
          if (response.message === 'content-script-playback-started') {

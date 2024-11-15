@@ -56,8 +56,8 @@ const listeners = [
             
             const mouseClickResponse = await chrome.runtime.sendMessage({ action: 'click', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, x, y, targetCssSelector, time });
             //currently not being sent back targetCssSelector
-            ({ x, y, interval, time } = mouseClickResponse);
-            console.log(`Mouse clicked! Values stored in background storage => tabId: ${mouseClickResponse.tabId}, tabUrl: ${mouseClickResponse.tabUrl}, x: ${x}, y: ${y}, interval: ${interval}`);
+            ({ latestStepId, x, y, interval, time } = mouseClickResponse);
+            console.log(`Mouse clicked! Values stored in background storage => latestStepId: ${mouseClickResponse.latestStepId} tabId: ${mouseClickResponse.tabId}, tabUrl: ${mouseClickResponse.tabUrl}, x: ${x}, y: ${y}, interval: ${interval}`);
             
             let endTime = Date.now();
             console.log(`Round trip operation from mouse click to storage to response received back in content script: ${endTime - time} ms`);
@@ -78,6 +78,24 @@ function removeAllListeners() {
     });
 }
 
+class SignalController {
+    constructor() {
+        this.shouldStop = false
+    }
+    stop () {
+        this.shouldStop = true;
+    }
+}
+
+const signalController = {
+    shouldStop: false,
+    timeoutIds: [],
+    stop: function() {
+        this.shouldStop = true
+        this.timeoutIds.forEach(id => clearTimeout(id))
+    }
+};
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log('content-script.js: received message from background');
 
@@ -95,21 +113,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         alert(`content-script.js: playback started on tab ${message.tabId}`);
         sendResponse({ tabId: message.tabId, message: 'content-script-playback-started'});
         console.log(`content-script.js: playbackArray => ${JSON.stringify(message.playbackArray)}`);
-        startPlayback(message.playbackArray);
+        startPlayback(message.playbackArray, signalController);
     }
     if (message.action === 'stop-playback') {
-        stopPlayback(message.tabId);
+        //TODO: implement stopPlayback function
+        // stopPlayback(message.tabId, signalController);
+        signalController.stop();
         alert(`content-script.js: playback stopped on tab ${message.tabId}`);
         sendResponse({ tabId: message.tabId, message: 'content-script-playback-stopped'});
     }
 });
 
-function startPlayback(playbackArray) {
+function startPlayback(playbackArray, signalController) {
     const firstEvent = playbackArray[0];
     chrome.runtime.sendMessage('get-tab-info', (response) => {
         console.log(`Playback tabUrl: ${response.tabUrl}`);
         if (response.tabUrl === firstEvent.tabUrl) {
-            continuePlayback(playbackArray);
+            continuePlayback(playbackArray, signalController);
         } else {
             chrome.runtime.sendMessage('stop-playback', (response) => {
                 if (chrome.runtime.lastError) {
@@ -123,15 +143,17 @@ function startPlayback(playbackArray) {
     });
 }
 
-function continuePlayback(playbackArray) {
+function continuePlayback(playbackArray, signalController) {
     let totalInterval = 0;
-    for (let idx in playbackArray) {
-        const event = playbackArray[idx];
+    let index = 0;
+    while (!signalController.shouldStop && index < playbackArray.length) {
+        const event = playbackArray[index];
         const interval = event.interval;
         totalInterval += interval;
-        setTimeout(generateMouseEvent, totalInterval, event);
+        const timeoutId = setTimeout(generateMouseEvent, totalInterval, event);
+        signalController.timeoutIds.push(timeoutId);
         //TODO: finish handling this last call here
-        if (idx === playbackArray.length - 1) {
+        if (index === playbackArray.length - 1) {
             setTimeout(() => {
                 //TODO: error handling
                 chrome.runtime.sendMessage('playback-complete', (response) => {
@@ -139,6 +161,7 @@ function continuePlayback(playbackArray) {
                 });
             }, totalInterval + 50);
         }
+        index++;
     }
 }
 
