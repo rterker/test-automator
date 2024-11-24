@@ -53,7 +53,6 @@ const listeners = [
     },
 ];
 
-
 console.log('content-script.js is loading...');
 
 chrome.runtime.sendMessage('is-recording-already-enabled', (response) => {
@@ -143,7 +142,6 @@ function continuePlayback(playbackArray, signalController) {
         totalInterval += interval;
         const timeoutId = setTimeout(generateMouseEvent, totalInterval, event);
         signalController.timeoutIds.push(timeoutId);
-        //TODO: finish handling this last call here
         if (index === playbackArray.length - 1) {
             const timeoutId = setTimeout(() => {
                 //TODO: error handling
