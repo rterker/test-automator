@@ -24,16 +24,9 @@ export function isRecording(tabId) {
     return tabRecordingStatus[tabId];
 }
 
-export function toggleRecording(tabId) {
-    const toggledStatus = tabRecordingStatus[tabId] = !tabRecordingStatus[tabId];
-    logger.log(`toggleRecording: Recording status of ${tabId} is now ${toggledStatus}`, path);
-    return toggledStatus;
-}
-
-export function togglePlayback(tabId) {
-    const toggledStatus = tabPlaybackStatus[tabId] = !tabPlaybackStatus[tabId];
-    logger.log(`togglePlayback: Playback status of ${tabId} is now ${toggledStatus}`, path);
-    return toggledStatus;
+export function setRecordingStatus(tabId, status) {
+    tabRecordingStatus[tabId] = status;
+    logger.log(`setRecordingStatus: Recording status of ${tabId} set to ${status}`, path);
 }
 
 export function setPlaybackStatus(tabId, status) {

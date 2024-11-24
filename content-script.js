@@ -1,15 +1,3 @@
-console.log('content-script.js is loading...');
-
-chrome.runtime.sendMessage('is-recording-already-enabled', (response) => {
-    if (response === 'recording-enabled') {
-        console.log(`content-script.js: content of window changed. confirmed that recording should still be enabled.`);
-        addAllListeners();
-    } else if (response === 'recording-disabled') {
-        console.log(`content-script.js: content of window changed. confirmed that recording should still be disabled.`);
-        removeAllListeners();
-    }
-});
-
 const listeners = [
     {
         element: document, 
@@ -65,39 +53,31 @@ const listeners = [
     },
 ];
 
-function addAllListeners() {
-    listeners.forEach(({ element, eventType, handler }) => {
-        element.addEventListener(eventType, handler);
-    }
-    );
-}
 
-function removeAllListeners() {
-    listeners.forEach(({ element, eventType, handler }) => {
-        element.removeEventListener(eventType, handler);
-    });
-}
+console.log('content-script.js is loading...');
 
-class SignalController {
-    constructor() {
-        this.shouldStop = false
+chrome.runtime.sendMessage('is-recording-already-enabled', (response) => {
+    if (response === 'recording-enabled') {
+        console.log(`content-script.js: content of window changed. confirmed that recording should still be enabled.`);
+        addAllListeners();
+    } else if (response === 'recording-disabled') {
+        console.log(`content-script.js: content of window changed. confirmed that recording should still be disabled.`);
+        removeAllListeners();
     }
-    stop () {
-        this.shouldStop = true;
-    }
-}
-
-const signalController = {
-    shouldStop: false,
-    timeoutIds: [],
-    stop: function() {
-        this.shouldStop = true
-        this.timeoutIds.forEach(id => clearTimeout(id))
-    }
-};
+});
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log('content-script.js: received message from background');
+    
+    const signalController = {
+        shouldStop: false,
+        timeoutIds: [],
+        stopPlayback: function() {
+            this.shouldStop = true
+            this.timeoutIds.forEach(id => clearTimeout(id));
+            this.timeoutIds = [];
+        }
+    };
 
     if (message.action === 'start-recording') {
         addAllListeners();
@@ -116,13 +96,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         startPlayback(message.playbackArray, signalController);
     }
     if (message.action === 'stop-playback') {
-        //TODO: implement stopPlayback function
-        // stopPlayback(message.tabId, signalController);
-        signalController.stop();
+        signalController.stopPlayback();
         alert(`content-script.js: playback stopped on tab ${message.tabId}`);
         sendResponse({ tabId: message.tabId, message: 'content-script-playback-stopped'});
     }
 });
+
+function addAllListeners() {
+    listeners.forEach(({ element, eventType, handler }) => {
+        element.addEventListener(eventType, handler);
+    }
+    );
+}
+
+function removeAllListeners() {
+    listeners.forEach(({ element, eventType, handler }) => {
+        element.removeEventListener(eventType, handler);
+    });
+}
 
 function startPlayback(playbackArray, signalController) {
     const firstEvent = playbackArray[0];
@@ -154,12 +145,13 @@ function continuePlayback(playbackArray, signalController) {
         signalController.timeoutIds.push(timeoutId);
         //TODO: finish handling this last call here
         if (index === playbackArray.length - 1) {
-            setTimeout(() => {
+            const timeoutId = setTimeout(() => {
                 //TODO: error handling
                 chrome.runtime.sendMessage('playback-complete', (response) => {
                     alert(`content-script.js: ${response.message} on tab ${response.tabId}`);
                 });
             }, totalInterval + 50);
+            signalController.timeoutIds.push(timeoutId);
         }
         index++;
     }
@@ -199,13 +191,6 @@ function clickMouseLeft(x, y) {
     const element = document.elementFromPoint(x, y);
     element.dispatchEvent(clickEvent);
 }
-
-
-
-
-
-
-
 
 function generateCssSelector(target) {
     const path = [];
@@ -256,3 +241,5 @@ function generateCssSelector(target) {
 
     return path.join(' > ');
 }
+
+
