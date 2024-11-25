@@ -1,27 +1,27 @@
 const listeners = [
-    {
-        element: document, 
-        eventType: 'mousemove', 
-        handler: async function (event) {
-            let x = event.clientX;
-            let y = event.clientY;
-            let time = Date.now();
+    // {
+    //     element: document, 
+    //     eventType: 'mousemove', 
+    //     handler: async function (event) {
+    //         let x = event.clientX;
+    //         let y = event.clientY;
+    //         let time = Date.now();
 
-            const tabInfoResponse = await chrome.runtime.sendMessage('get-tab-info');
+    //         const tabInfoResponse = await chrome.runtime.sendMessage('get-tab-info');
             
-            // console.log('\n');
-            // console.log(`content-script.js: mousemove tab info:`);
-            // console.log(`tabId: ${tabInfoResponse.tabId}`);
-            // console.log(`tabUrl: ${tabInfoResponse.tabUrl}`);
+    //         // console.log('\n');
+    //         // console.log(`content-script.js: mousemove tab info:`);
+    //         // console.log(`tabId: ${tabInfoResponse.tabId}`);
+    //         // console.log(`tabUrl: ${tabInfoResponse.tabUrl}`);
             
-            const mouseMoveResponse = await chrome.runtime.sendMessage({ action: 'mousemove', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, x, y, time });
-            ({ x, y, interval, time } = mouseMoveResponse);
-            // console.log(`Mouse moved! Values stored in background storage => tabId: ${mouseMoveResponse.tabId}, tabUrl: ${mouseMoveResponse.tabUrl}, x: ${x}, y: ${y}, interval: ${interval}`);
+    //         const mouseMoveResponse = await chrome.runtime.sendMessage({ action: 'mousemove', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, x, y, time });
+    //         //currently not being sent back targetCssSelector
+    //         // console.log(`Mouse moved! Values stored in background storage => tabId: ${mouseMoveResponse.tabId}, tabUrl: ${mouseMoveResponse.tabUrl}, x: ${mouseMoveResponse.x}, y: ${mouseMoveResponse.y}, interval: ${mouseMoveResponse.interval}`);
 
-            let endTime = Date.now();
-            // console.log(`Round trip operation from mouse move to storage to response received back in content script: ${endTime - time} ms`);
-        }
-    },
+    //         let endTime = Date.now();
+    //         // console.log(`Round trip operation from mouse move to storage to response received back in content script: ${endTime - mouseMoveResponse.time} ms`);
+    //     }
+    // },
     {
         element: document, 
         eventType: 'click', 
@@ -38,17 +38,50 @@ const listeners = [
             
             const tabInfoResponse = await chrome.runtime.sendMessage('get-tab-info');
             
-            console.log(`content-script.js: mousemove tab info:`);
+            console.log(`content-script.js: click tab info:`);
             console.log(`tabId: ${tabInfoResponse.tabId}`);
             console.log(`tabUrl: ${tabInfoResponse.tabUrl}`);
             
             const mouseClickResponse = await chrome.runtime.sendMessage({ action: 'click', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, x, y, targetCssSelector, time });
             //currently not being sent back targetCssSelector
-            ({ latestStepId, x, y, interval, time } = mouseClickResponse);
-            console.log(`Mouse clicked! Values stored in background storage => latestStepId: ${mouseClickResponse.latestStepId} tabId: ${mouseClickResponse.tabId}, tabUrl: ${mouseClickResponse.tabUrl}, x: ${x}, y: ${y}, interval: ${interval}`);
+            console.log(`Mouse clicked! Values stored in background storage => latestStepId: ${mouseClickResponse.latestStepId} tabId: ${mouseClickResponse.tabId}, tabUrl: ${mouseClickResponse.tabUrl}, x: ${mouseClickResponse.x}, y: ${mouseClickResponse.y}, interval: ${mouseClickResponse.interval}`);
             
             let endTime = Date.now();
-            console.log(`Round trip operation from mouse click to storage to response received back in content script: ${endTime - time} ms`);
+            console.log(`Round trip operation from mouse click to storage to response received back in content script: ${endTime - mouseClickResponse.time} ms`);
+        }
+    },
+    {
+        element: document.querySelectorAll('input'),
+        eventType: 'input',
+        handler: async function (event) {
+            let target = event.target;
+            let time = Date.now();
+            let inputText;
+
+            console.log('\n');
+            console.log(`In content-script.js, input target is ${target}`);
+            let targetCssSelector = generateCssSelector(target);
+            console.log('cssSelector for input target:', targetCssSelector);
+
+            //TODO: handle target.isContentEditable elements
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+                inputText = target.value;
+
+                const tabInfoResponse = await chrome.runtime.sendMessage('get-tab-info');
+    
+                console.log(`content-script.js: input tab info:`);
+                console.log(`tabId: ${tabInfoResponse.tabId}`);
+                console.log(`tabUrl: ${tabInfoResponse.tabUrl}`);
+                
+                //TODO: handle background messaging and storage
+                const inputResponse = await chrome.runtime.sendMessage({ action: 'input', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, inputText, targetCssSelector, time });
+                //currently not being sent back targetCssSelector
+                console.log(`Input typed! Values stored in background storage => latestStepId: ${inputResponse.latestStepId} tabId: ${inputResponse.tabId}, tabUrl: ${inputResponse.tabUrl}, inputText: ${inputResponse.inputText}, interval: ${inputResponse.interval}`);
+                
+                let endTime = Date.now();
+                console.log(`Round trip operation from input to storage to response received back in content script: ${endTime - inputResponse.time} ms`);
+            }
+
         }
     },
 ];
@@ -103,14 +136,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 function addAllListeners() {
     listeners.forEach(({ element, eventType, handler }) => {
-        element.addEventListener(eventType, handler);
+        if (element.length) {
+            element.forEach(el => {
+                el.addEventListener(eventType, handler);
+            });
+        } else {
+            element.addEventListener(eventType, handler);
+        }
     }
     );
 }
 
 function removeAllListeners() {
     listeners.forEach(({ element, eventType, handler }) => {
-        element.removeEventListener(eventType, handler);
+        if (element.length) {
+            element.forEach(el => {
+                el.removeEventListener(eventType, handler);
+            });
+        } else {
+            element.removeEventListener(eventType, handler);
+        }
     });
 }
 
@@ -137,10 +182,15 @@ function continuePlayback(playbackArray, signalController) {
     let totalInterval = 0;
     let index = 0;
     while (!signalController.shouldStop && index < playbackArray.length) {
+        let timeoutId;
         const event = playbackArray[index];
         const interval = event.interval;
         totalInterval += interval;
-        const timeoutId = setTimeout(generateMouseEvent, totalInterval, event);
+        if (event.action === 'click') {
+            timeoutId = setTimeout(generateMouseEvent, totalInterval, event);
+        } else if (event.action === 'input') {
+            timeoutId = setTimeout(generateInputEvent, totalInterval, event);
+        }
         signalController.timeoutIds.push(timeoutId);
         if (index === playbackArray.length - 1) {
             const timeoutId = setTimeout(() => {
@@ -189,6 +239,19 @@ function clickMouseLeft(x, y) {
     const element = document.elementFromPoint(x, y);
     element.dispatchEvent(clickEvent);
 }
+
+//TODO: generate input text on element on playback
+//TODO: need to handle based on cssSelector possibly
+function generateInputEvent(event) {
+    const { action, interval, inputText, tabUrl, tabId } = event;
+    const inputEvent = new InputEvent('input', {
+        bubbles: true,
+        cancelable: true,
+        inputType: 'insertText',
+        data: text,
+    });
+};
+
 
 function generateCssSelector(target) {
     const path = [];
@@ -240,4 +303,7 @@ function generateCssSelector(target) {
     return path.join(' > ');
 }
 
+
+//is this a textbox
+//if it's a textbox, capture the text
 

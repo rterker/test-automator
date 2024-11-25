@@ -46,6 +46,30 @@ export function storeMouseEvent(recordingId, message, sendResponse) {
   });
 }
 
+export function storeInputEvent(recordingId, message, sendResponse) {
+  //currently not doing anything with targetCssSelector
+  const { action, tabId, tabUrl, inputText, targetCssSelector, time } = message;
+  const interval = incrementAndGetTime(recordingId, time);
+  const entry = { action, tabId, tabUrl, inputText, interval };
+
+  chrome.storage.session.get([recordingId], function(data){
+    const nextStepId = data[recordingId]?.nextStepId ?? 0;
+    console.log('data[recordingId]:', data[recordingId])
+    console.log('nextStepId:', nextStepId)
+    entry.stepId = nextStepId;
+    const currentData = data[recordingId]?.steps || [];
+    console.log('currentData:', currentData)
+    const newData = [
+      ...currentData,
+      entry
+    ];
+    
+    chrome.storage.session.set({ [recordingId]: { nextStepId: nextStepId + 1, steps: newData } }, function() {
+      sendResponse({ ...entry, time });
+    });
+  });
+}
+
 export function getPlaybackObject(recordingId) {
   return new Promise((resolve, reject) => {
     chrome.storage.session.get([recordingId], function(data){
