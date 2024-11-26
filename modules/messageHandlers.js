@@ -12,7 +12,6 @@ import {
 
 import { 
   storeMouseEvent,
-  storeInputEvent, 
   storeKeydownEvent,
   getPlaybackObject
 } from "./storage.js";

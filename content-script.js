@@ -107,8 +107,7 @@ const listeners = [
             
             //TODO: handle background messaging and storage
             const keydownResponse = await chrome.runtime.sendMessage({ action: 'keydown', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, keyValue, targetCssSelector, time });
-            //currently not being sent back targetCssSelector
-            console.log(`Keydown! Values stored in background storage => latestStepId: ${keydownResponse.latestStepId} tabId: ${keydownResponse.tabId}, tabUrl: ${keydownResponse.tabUrl}, inputText: ${keydownResponse.keyValue}, interval: ${keydownResponse.interval}`);
+            console.log(`Keydown! Values stored in background storage => latestStepId: ${keydownResponse.latestStepId} tabId: ${keydownResponse.tabId}, tabUrl: ${keydownResponse.tabUrl}, inputText: ${keydownResponse.keyValue}, targetCssSelector: ${keydownResponse.targetCssSelector}, interval: ${keydownResponse.interval}`);
             
             let endTime = Date.now();
             console.log(`Round trip operation from keydown to storage to response received back in content script: ${endTime - keydownResponse.time} ms`);
