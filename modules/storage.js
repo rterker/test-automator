@@ -71,7 +71,7 @@ export function storeMouseEvent(recordingId, message, sendResponse) {
 // }
 
 export function storeKeydownEvent(recordingId, message, sendResponse) {
-  const entry = createEntry(message);
+  const entry = createEntry(recordingId, message);
 
   chrome.storage.session.get([recordingId], function(data){
     const nextStepId = data[recordingId]?.nextStepId ?? 0;
@@ -86,7 +86,7 @@ export function storeKeydownEvent(recordingId, message, sendResponse) {
     ];
     
     chrome.storage.session.set({ [recordingId]: { nextStepId: nextStepId + 1, steps: newData } }, function() {
-      sendResponse({ ...entry, time });
+      sendResponse({ ...entry, time: message.time });
     });
   });
 }
