@@ -13,6 +13,7 @@ import {
 import { 
   storeMouseEvent,
   storeInputEvent, 
+  storeKeydownEvent,
   getPlaybackObject
 } from "./storage.js";
 
@@ -160,13 +161,15 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
 }
 
 function handleRecordingEvents(message, sender, sendResponse) {
-  console.log('messageHandlers.js message: ', message);
+  console.log('messageHandlers.js message from content-script: ', message);
   const recordingId = getRecordingId();
 
   if (message.action === 'click') {
     storeMouseEvent(recordingId, message, sendResponse);
-  } else if (message.action === 'input') {
-    storeInputEvent(recordingId, message, sendResponse);
+  // } else if (message.action === 'input') {
+  //   storeInputEvent(recordingId, message, sendResponse);
+  } else if (message.action === 'keydown') {
+    storeKeydownEvent(recordingId, message, sendResponse);
   }
   //handle sendResponse for recording events asynchronously, as the storage api is async
   return true;   
