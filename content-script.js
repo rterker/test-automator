@@ -50,38 +50,68 @@ const listeners = [
             console.log(`Round trip operation from mouse click to storage to response received back in content script: ${endTime - mouseClickResponse.time} ms`);
         }
     },
+    // {
+    //     element: document.querySelectorAll('input'),
+    //     eventType: 'input',
+    //     handler: async function (event) {
+    //         let target = event.target;
+    //         let time = Date.now();
+    //         let inputText;
+
+    //         console.log('\n');
+    //         console.log(`In content-script.js, input target is ${target}`);
+    //         let targetCssSelector = generateCssSelector(target);
+    //         console.log('cssSelector for input target:', targetCssSelector);
+
+    //         //TODO: handle target.isContentEditable elements
+    //         if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+    //             inputText = target.value;
+
+    //             const tabInfoResponse = await chrome.runtime.sendMessage('get-tab-info');
+    
+    //             console.log(`content-script.js: input tab info:`);
+    //             console.log(`tabId: ${tabInfoResponse.tabId}`);
+    //             console.log(`tabUrl: ${tabInfoResponse.tabUrl}`);
+                
+    //             //TODO: handle background messaging and storage
+    //             const inputResponse = await chrome.runtime.sendMessage({ action: 'input', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, inputText, targetCssSelector, time });
+    //             //currently not being sent back targetCssSelector
+    //             console.log(`Input typed! Values stored in background storage => latestStepId: ${inputResponse.latestStepId} tabId: ${inputResponse.tabId}, tabUrl: ${inputResponse.tabUrl}, inputText: ${inputResponse.inputText}, interval: ${inputResponse.interval}`);
+                
+    //             let endTime = Date.now();
+    //             console.log(`Round trip operation from input to storage to response received back in content script: ${endTime - inputResponse.time} ms`);
+    //         }
+
+    //     }
+    // },
     {
-        element: document.querySelectorAll('input'),
-        eventType: 'input',
+        element: document,
+        eventType: 'keydown',
         handler: async function (event) {
             let target = event.target;
             let time = Date.now();
-            let inputText;
+            let keyValue = event.key;
 
             console.log('\n');
             console.log(`In content-script.js, input target is ${target}`);
+            console.log(`In content-script.js, key pressed is ${keyValue}`);
             let targetCssSelector = generateCssSelector(target);
             console.log('cssSelector for input target:', targetCssSelector);
 
-            //TODO: handle target.isContentEditable elements
-            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-                inputText = target.value;
 
-                const tabInfoResponse = await chrome.runtime.sendMessage('get-tab-info');
-    
-                console.log(`content-script.js: input tab info:`);
-                console.log(`tabId: ${tabInfoResponse.tabId}`);
-                console.log(`tabUrl: ${tabInfoResponse.tabUrl}`);
-                
-                //TODO: handle background messaging and storage
-                const inputResponse = await chrome.runtime.sendMessage({ action: 'input', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, inputText, targetCssSelector, time });
-                //currently not being sent back targetCssSelector
-                console.log(`Input typed! Values stored in background storage => latestStepId: ${inputResponse.latestStepId} tabId: ${inputResponse.tabId}, tabUrl: ${inputResponse.tabUrl}, inputText: ${inputResponse.inputText}, interval: ${inputResponse.interval}`);
-                
-                let endTime = Date.now();
-                console.log(`Round trip operation from input to storage to response received back in content script: ${endTime - inputResponse.time} ms`);
-            }
+            const tabInfoResponse = await chrome.runtime.sendMessage('get-tab-info');
 
+            console.log(`content-script.js: input tab info:`);
+            console.log(`tabId: ${tabInfoResponse.tabId}`);
+            console.log(`tabUrl: ${tabInfoResponse.tabUrl}`);
+            
+            //TODO: handle background messaging and storage
+            const keydownResponse = await chrome.runtime.sendMessage({ action: 'keydown', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, keyValue, targetCssSelector, time });
+            //currently not being sent back targetCssSelector
+            console.log(`Keydown! Values stored in background storage => latestStepId: ${keydownResponse.latestStepId} tabId: ${keydownResponse.tabId}, tabUrl: ${keydownResponse.tabUrl}, inputText: ${keydownResponse.keyValue}, interval: ${keydownResponse.interval}`);
+            
+            let endTime = Date.now();
+            console.log(`Round trip operation from keydown to storage to response received back in content script: ${endTime - keydownResponse.time} ms`);
         }
     },
 ];
@@ -136,6 +166,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 function addAllListeners() {
     listeners.forEach(({ element, eventType, handler }) => {
+        //element has length is using querySelectorAll to get elements in listeners
         if (element.length) {
             element.forEach(el => {
                 el.addEventListener(eventType, handler);
@@ -149,6 +180,7 @@ function addAllListeners() {
 
 function removeAllListeners() {
     listeners.forEach(({ element, eventType, handler }) => {
+        //element has length is using querySelectorAll to get elements in listeners
         if (element.length) {
             element.forEach(el => {
                 el.removeEventListener(eventType, handler);
