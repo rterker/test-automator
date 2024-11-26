@@ -219,8 +219,8 @@ function continuePlayback(playbackArray, signalController) {
         totalInterval += interval;
         if (event.action === 'click') {
             timeoutId = setTimeout(generateMouseEvent, totalInterval, event);
-        } else if (event.action === 'input') {
-            timeoutId = setTimeout(generateInputEvent, totalInterval, event);
+        } else if (event.action === 'keydown') {
+            timeoutId = setTimeout(generateTyping, totalInterval, event);
         }
         signalController.timeoutIds.push(timeoutId);
         if (index === playbackArray.length - 1) {
@@ -272,16 +272,44 @@ function clickMouseLeft(x, y) {
 }
 
 //TODO: generate input text on element on playback
-//TODO: need to handle based on cssSelector possibly
-function generateInputEvent(event) {
-    const { action, interval, inputText, tabUrl, tabId } = event;
+//TODO: handle backspace, space, delete, enter
+function generateTyping(event) {
+    const { action, interval, keyValue, tabUrl, tabId, targetCssSelector } = event;
+    const targetElement = document.querySelector(targetCssSelector); 
+
     const inputEvent = new InputEvent('input', {
         bubbles: true,
         cancelable: true,
         inputType: 'insertText',
-        data: text,
+        data: keyValue,
     });
-};
+
+    const keydownEvent = new KeyboardEvent("keydown", {
+        key: keyValue,        // The key that was pressed
+        // code: "KeyA",    // The physical key on the keyboard
+        // keyCode: 65,     // Deprecated but sometimes needed for older browsers
+        // charCode: 65,    // Deprecated
+        // which: 65,       // Deprecated but used in some older libraries
+        bubbles: true,   // Ensures the event bubbles up the DOM
+        cancelable: true // Allows event.preventDefault() to be called
+    });
+
+    const keyupEvent = new KeyboardEvent("keyup", { 
+        key: keyValue, 
+        bubbles: true, 
+        cancelable: true 
+    });
+        
+    // Dispatch the events for any event listeners on the page
+    targetElement.dispatchEvent(keydownEvent); 
+    
+    //update value: this will start the element value back at empty. not sure why
+    const currVal = targetElement.value || '';
+    targetElement.value = currVal + keyValue;
+
+    targetElement.dispatchEvent(inputEvent);  
+    targetElement.dispatchEvent(keyupEvent);
+}
 
 
 function generateCssSelector(target) {
