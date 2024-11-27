@@ -11,8 +11,7 @@ import {
 } from "./recordingStatus.js";
 
 import { 
-  storeMouseEvent,
-  storeKeydownEvent,
+  storeEvent,
   getPlaybackObject
 } from "./storage.js";
 
@@ -154,7 +153,9 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
     return sendResponse({ tabId, message });
   }
 
+  console.log('in here');
   if (isRecording(tabId)) {
+    console.log('now in here');
     return handleRecordingEvents(message, sender, sendResponse);
   } 
 }
@@ -163,13 +164,8 @@ function handleRecordingEvents(message, sender, sendResponse) {
   console.log('messageHandlers.js message from content-script: ', message);
   const recordingId = getRecordingId();
 
-  if (message.action === 'click') {
-    storeMouseEvent(recordingId, message, sendResponse);
-  // } else if (message.action === 'input') {
-  //   storeInputEvent(recordingId, message, sendResponse);
-  } else if (message.action === 'keydown') {
-    storeKeydownEvent(recordingId, message, sendResponse);
-  }
+  storeEvent(recordingId, message, sendResponse);
+
   //handle sendResponse for recording events asynchronously, as the storage api is async
   return true;   
 };

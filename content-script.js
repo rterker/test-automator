@@ -1,27 +1,13 @@
+//TODO: finish this logic to apply if page reloaded from cache
+window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+      console.log("Reinitializing content script after bfcache restore.");
+      // Your reinitialization logic here
+    }
+  });
+  
+
 const listeners = [
-    // {
-    //     element: document, 
-    //     eventType: 'mousemove', 
-    //     handler: async function (event) {
-    //         let x = event.clientX;
-    //         let y = event.clientY;
-    //         let time = Date.now();
-
-    //         const tabInfoResponse = await chrome.runtime.sendMessage('get-tab-info');
-            
-    //         // console.log('\n');
-    //         // console.log(`content-script.js: mousemove tab info:`);
-    //         // console.log(`tabId: ${tabInfoResponse.tabId}`);
-    //         // console.log(`tabUrl: ${tabInfoResponse.tabUrl}`);
-            
-    //         const mouseMoveResponse = await chrome.runtime.sendMessage({ action: 'mousemove', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, x, y, time });
-    //         //currently not being sent back targetCssSelector
-    //         // console.log(`Mouse moved! Values stored in background storage => tabId: ${mouseMoveResponse.tabId}, tabUrl: ${mouseMoveResponse.tabUrl}, x: ${mouseMoveResponse.x}, y: ${mouseMoveResponse.y}, interval: ${mouseMoveResponse.interval}`);
-
-    //         let endTime = Date.now();
-    //         // console.log(`Round trip operation from mouse move to storage to response received back in content script: ${endTime - mouseMoveResponse.time} ms`);
-    //     }
-    // },
     {
         element: document, 
         eventType: 'click', 
@@ -43,47 +29,13 @@ const listeners = [
             console.log(`tabUrl: ${tabInfoResponse.tabUrl}`);
             
             const mouseClickResponse = await chrome.runtime.sendMessage({ action: 'click', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, x, y, targetCssSelector, time });
-            //currently not being sent back targetCssSelector
-            console.log(`Mouse clicked! Values stored in background storage => stepId: ${mouseClickResponse.stepId} tabId: ${mouseClickResponse.tabId}, tabUrl: ${mouseClickResponse.tabUrl}, x: ${mouseClickResponse.x}, y: ${mouseClickResponse.y}, interval: ${mouseClickResponse.interval}`);
+            console.log('mouseClickResponse:', mouseClickResponse)
+            console.log(`Mouse clicked! Values stored in background storage => stepId: ${mouseClickResponse.stepId} tabId: ${mouseClickResponse.tabId}, tabUrl: ${mouseClickResponse.tabUrl}, x: ${mouseClickResponse.x}, y: ${mouseClickResponse.y}, targetCssSelector: ${mouseClickResponse.targetCssSelector}, interval: ${mouseClickResponse.interval}`);
             
             let endTime = Date.now();
             console.log(`Round trip operation from mouse click to storage to response received back in content script: ${endTime - mouseClickResponse.time} ms`);
         }
     },
-    // {
-    //     element: document.querySelectorAll('input'),
-    //     eventType: 'input',
-    //     handler: async function (event) {
-    //         let target = event.target;
-    //         let time = Date.now();
-    //         let inputText;
-
-    //         console.log('\n');
-    //         console.log(`In content-script.js, input target is ${target}`);
-    //         let targetCssSelector = generateCssSelector(target);
-    //         console.log('cssSelector for input target:', targetCssSelector);
-
-    //         //TODO: handle target.isContentEditable elements
-    //         if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-    //             inputText = target.value;
-
-    //             const tabInfoResponse = await chrome.runtime.sendMessage('get-tab-info');
-    
-    //             console.log(`content-script.js: input tab info:`);
-    //             console.log(`tabId: ${tabInfoResponse.tabId}`);
-    //             console.log(`tabUrl: ${tabInfoResponse.tabUrl}`);
-                
-    //             //TODO: handle background messaging and storage
-    //             const inputResponse = await chrome.runtime.sendMessage({ action: 'input', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, inputText, targetCssSelector, time });
-    //             //currently not being sent back targetCssSelector
-    //             console.log(`Input typed! Values stored in background storage => latestStepId: ${inputResponse.latestStepId} tabId: ${inputResponse.tabId}, tabUrl: ${inputResponse.tabUrl}, inputText: ${inputResponse.inputText}, interval: ${inputResponse.interval}`);
-                
-    //             let endTime = Date.now();
-    //             console.log(`Round trip operation from input to storage to response received back in content script: ${endTime - inputResponse.time} ms`);
-    //         }
-
-    //     }
-    // },
     {
         element: document,
         eventType: 'keydown',
@@ -107,7 +59,8 @@ const listeners = [
             
             //TODO: handle background messaging and storage
             const keydownResponse = await chrome.runtime.sendMessage({ action: 'keydown', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, keyValue, targetCssSelector, time });
-            console.log(`Keydown! Values stored in background storage => stepId: ${keydownResponse.stepId} tabId: ${keydownResponse.tabId}, tabUrl: ${keydownResponse.tabUrl}, inputText: ${keydownResponse.keyValue}, targetCssSelector: ${keydownResponse.targetCssSelector}, interval: ${keydownResponse.interval}`);
+            console.log('keydownResponse:', keydownResponse)
+            console.log(`Keydown! Values stored in background storage => stepId: ${keydownResponse.stepId} tabId: ${keydownResponse.tabId}, tabUrl: ${keydownResponse.tabUrl}, keyValue: ${keydownResponse.keyValue}, targetCssSelector: ${keydownResponse.targetCssSelector}, interval: ${keydownResponse.interval}`);
             
             let endTime = Date.now();
             console.log(`Round trip operation from keydown to storage to response received back in content script: ${endTime - keydownResponse.time} ms`);
@@ -153,7 +106,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'start-playback') {
         alert(`content-script.js: playback started on tab ${message.tabId}`);
         sendResponse({ tabId: message.tabId, message: 'content-script-playback-started'});
-        console.log(`content-script.js: playbackArray => ${JSON.stringify(message.playbackArray)}`);
+        console.log(`content-script.js: playbackArray => ${JSON.stringify(message.playbackArray, null, 2)}`);
         startPlayback(message.playbackArray, signalController);
     }
     if (message.action === 'stop-playback') {
@@ -238,24 +191,9 @@ function continuePlayback(playbackArray, signalController) {
 
 function generateMouseEvent(event) {
     const { action, interval, x, y, tabUrl, tabId } = event;
-    if (action === 'mousemove') {
-        moveMouse(x, y);
-    }
     if (action === 'click') {
         clickMouseLeft(x, y);
     }
-}
-
-function moveMouse(x, y) {
-    const moveEvent = new MouseEvent('mousemove', {
-        bubbles: true,
-        cancelable: true,
-        view: window,
-        clientX: x,    // required - x coordinate relative to viewport
-        clientY: y     // required - y coordinate relative to viewport
-    });
-    const element = document.elementFromPoint(x, y);
-    element.dispatchEvent(moveEvent);
 }
 
 function clickMouseLeft(x, y) {
@@ -271,7 +209,7 @@ function clickMouseLeft(x, y) {
     element.dispatchEvent(clickEvent);
 }
 
-//TODO: generate input text on element on playback
+//TODO: why does the targetElement.value always reset even if there was something in the text box before playback
 //TODO: handle backspace, space, delete, enter
 function generateTyping(event) {
     const { action, interval, keyValue, tabUrl, tabId, targetCssSelector } = event;
@@ -305,7 +243,9 @@ function generateTyping(event) {
     
     //update value: this will start the element value back at empty. not sure why
     const currVal = targetElement.value || '';
-    targetElement.value = currVal + keyValue;
+    if (isAlphaNumeric(keyValue)) {
+        targetElement.value = currVal + keyValue;
+    }
 
     targetElement.dispatchEvent(inputEvent);  
     targetElement.dispatchEvent(keyupEvent);
@@ -362,7 +302,14 @@ function generateCssSelector(target) {
     return path.join(' > ');
 }
 
+function isAlphaNumeric(keyValue) {
+    return (['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'].includes(keyValue.toLowerCase()) || ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].includes(keyValue));
+}
 
-//is this a textbox
-//if it's a textbox, capture the text
+function handleBackspace() {
+    
+}
 
+function handleEnter() {
+
+}
