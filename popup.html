@@ -1,7 +1,57 @@
-<html>
-    <body>
-        <button id="record-button" style="background-color: #ff4136; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">Record</button>
-        <button id="playback-button" style="background-color: #0074d9; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Playback</button>
-    <script src="popup.js"></script>
-    </body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testing UI</title>
+    <style>
+        body {
+            max-width: 600px;
+            max-height: 1000px;
+            margin: 10px auto;
+        }
+        .container {
+            border: 2px solid #333;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            
+        }
+        #testId {
+            font-size: medium;
+        }
+    </style>
+    <script src="popup.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <input type="text" id="testId" placeholder="Test ID">
+            <button id="submit">Submit</button>
+            <button id="refresh">
+                <svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"></path>
+                </svg>    
+                Refresh
+            </button>
+        </header>
+        <div id="steps-container">
+            <div id="steps-list">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>
+        <div id="controls">
+            <button id="record-button" style="background-color: #ff4136; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">Record</button>
+            <button id="playback-button" style="background-color: #0074d9; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Playback</button>
+        </div>
+    </div>
+</body>
 </html>
+
+
