@@ -7,8 +7,8 @@
     <style>
         body {
             max-width: 600px;
-            max-height: 1000px;
             margin: 10px auto;
+            padding: 10px;
         }
         .container {
             border: 2px solid #333;
@@ -21,7 +21,49 @@
             
         }
         #testId {
-            font-size: medium;
+            font-size: 16px;
+            border-radius: 4px;
+        }
+        #steps-container {
+            height: 350px;
+            max-height: 350px;
+            margin-bottom: 20px;
+            border: 2px solid #333
+        }
+        #controls {
+            display: flex;
+            justify-content: space-around;
+        }
+        #submit, #refresh {
+            font-size: 16px;
+            white-space: nowrap;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .refresh-icon {
+            width: 16px;
+            height: 16px;
+            vertical-align: bottom;
+            margin-right: 4px;
+        }
+        #record {
+            font-size: 16px;
+            background-color: #ff4136; 
+            color: white; 
+            padding: 10px 20px; 
+            border: 2px solid #333; 
+            border-radius: 4px; 
+            cursor: pointer; 
+        }
+        #playback {
+            font-size: 16px;
+            background-color: #0074d9; 
+            color: white; 
+            padding: 10px 20px; 
+            border: 2px solid #333; 
+            border-radius: 4px; 
+            cursor: pointer;
         }
     </style>
     <script src="popup.js" defer></script>
@@ -39,16 +81,11 @@
             </button>
         </header>
         <div id="steps-container">
-            <div id="steps-list">
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-            </div>
+            <div id="steps"></div>
         </div>
         <div id="controls">
-            <button id="record-button" style="background-color: #ff4136; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">Record</button>
-            <button id="playback-button" style="background-color: #0074d9; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Playback</button>
+            <button id="record">Record</button>
+            <button id="playback">Playback</button>
         </div>
     </div>
 </body>

@@ -18,8 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     logger.log('popup.js is loading...', path);
     
-    const recordButton = document.getElementById('record-button');
-    const playbackButton = document.getElementById('playback-button');
+    const recordButton = document.getElementById('record');
+    const playbackButton = document.getElementById('playback');
+    const testId = document.getElementById('testId');
+    const submit = document.getElementById('submit');
+    const refresh = document.getElementById('refresh');
+    const steps = document.getElementById('steps');
     
     
     recordButton.addEventListener('click', (event) => {
