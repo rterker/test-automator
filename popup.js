@@ -43,7 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const error = chrome.runtime.lastError;
                     if (error) {
                         logger.log(error, path, ERROR);
-                    } else {
+                    } 
+                    if (response.message === 'content-script-recording-started') {
                         logger.log(`Recording started for tab: ${response.tabId}`, path);
                     }
                 });
@@ -52,7 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const error = chrome.runtime.lastError;
                     if (error) {
                         logger.log(error, path, ERROR);
-                    } else {
+                    } 
+                    if (response.message === 'content-script-recording-stopped') {
                         logger.log(`Recording stopped for tab: ${response.tabId}`, path);
                     }
                 });

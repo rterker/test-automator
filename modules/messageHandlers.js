@@ -47,9 +47,7 @@ export function handlePopupMessage(message, sender, sendResponse) {
     if (message === 'start-recording') {
       //message sent to content-script
       chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'start-recording' }, (response) => {
-        // console.log(`popupMessage: response from start-recording message sent to content-script: ${JSON.stringify(response, null, 2)}`);
         if (response.message === 'content-script-recording-started') {
-            //toggle and save current recording status in background
             setRecordingStatus(response.tabId, true);
             initializeRecordingTimer();
         } else {
@@ -63,15 +61,11 @@ export function handlePopupMessage(message, sender, sendResponse) {
     if (message === 'stop-recording') {
       //message sent to content-script
       chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'stop-recording' }, (response) => {
-        // console.log(`popupMessage: response from stop-recording message sent to content-script: ${JSON.stringify(response, null, 2)}`);
-        if (response.message === 'content-script-recording-stopped') {
-            //toggle and save current recording status in background
-            //TODO: set instead of toggle
-            setRecordingStatus(response.tabId, false);
-          } else {
+        setRecordingStatus(response.tabId, false);
+        if (response.message !== 'content-script-recording-stopped') {
             response.message = chrome.runtime.lastError;
             logger.log(`messageHandlers.js: error message received from content-script when attempting to stop-recording`, path, ERROR);
-          }
+        }
         //response sent to popup.js - not doing anything with message in popup currently
         sendResponse({ tabId: response.tabId, message: response.message });
       });
@@ -84,7 +78,6 @@ export function handlePopupMessage(message, sender, sendResponse) {
         //message sent to content-script
         chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'start-playback', playbackArray }, (response) => {
          if (response.message === 'content-script-playback-started') {
-           //toggle and save current playback status in background
            setPlaybackStatus(response.tabId, true);
          } else {
            response.message = chrome.runtime.lastError;
@@ -101,10 +94,8 @@ export function handlePopupMessage(message, sender, sendResponse) {
     if (message === 'stop-playback') {
       // stop the current playback using some sort of id
       chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'stop-playback' }, (response) => {
-        if (response.message === 'content-script-playback-stopped') {
-          //toggle and save current playback status in background
-          setPlaybackStatus(response.tabId, false);
-          } else {
+        setPlaybackStatus(response.tabId, false);
+        if (response.message !== 'content-script-playback-stopped') {
           response.message = chrome.runtime.lastError;
           logger.log(`messageHandlers.js: error message received from content-script when attempting to stop-playback`, path, ERROR);
         }
@@ -153,9 +144,7 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
     return sendResponse({ tabId, message });
   }
 
-  console.log('in here');
   if (isRecording(tabId)) {
-    console.log('now in here');
     return handleRecordingEvents(message, sender, sendResponse);
   } 
 }
