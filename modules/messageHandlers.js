@@ -23,10 +23,14 @@ import {
 const path = import.meta.url;
 
 export function handlePopupMessage(message, sender, sendResponse) {
-  // console.log(`messageHandlers.js: popupMessage message received from ${JSON.stringify(sender, null, 2)}`);
   //getting current tab this way since messages from popup don't contain it
-  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-    const tabId = tabs[0].id;
+  chrome.tabs.query({active: true}, function(tabs) {
+    console.log('tabs: ', JSON.stringify(tabs, null, 2));
+    //get the 2nd to last accessed tab (the last one is the popup window), which should be the one we want to apply the recording to
+    tabs = tabs.sort((a, b) => b.lastAccessed - a.lastAccessed);
+    console.log('tab is: ', JSON.stringify(tabs[1], null, 2));
+    const tabId = tabs[1].id;
+
     logger.log(`popupMessage: current tabId is ${tabId}`, path);
     if (message === 'get-recording-status') {
       logger.log(`popupMessage: get-recording-status message received.`, path);

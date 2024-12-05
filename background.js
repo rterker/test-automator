@@ -13,13 +13,18 @@ chrome.tabs.onCreated.addListener((tab) => {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // console.log(`background.js: message received from ${JSON.stringify(sender, null, 2)}`);    
-    if (!sender.tab) {
+    if (sender.tab.url.slice(0, 16) === 'chrome-extension') {
+        console.log('popup message =>');
         handlePopupMessage(message, sender, sendResponse);
         //keep connection open: allows you to call sendResponse async
         return true;
-    } else {
+    } 
+    if (sender.tab.url.slice(0, 4) === 'http') {
+        console.log('content-script message => ');
         //returning here so that true can be returned when sendResponse needs to respond asynchronously
         return handleContentScriptMessage(message, sender, sendResponse);
     }
 });
+
+
 

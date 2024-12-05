@@ -4,8 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
     chrome.windows.create({
       url: chrome.runtime.getURL('controls.html'),
       type: 'popup',
-      width: 1000,
-      height: 2000
+      width: 600,
+      height: 900
     });
   });
 });
