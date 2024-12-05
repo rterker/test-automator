@@ -21,6 +21,9 @@
         "default_icon": "logo.png",
         "default_title": "Click to activate extension",
         "default_popup": "popup.html"
+    },
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; object-src 'none';"
     }
   }
 

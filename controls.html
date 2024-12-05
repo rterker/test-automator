@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testing UI</title>
+    <link rel="stylesheet" href="controls-styles.css">
+    <script src="controls.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <input type="text" id="testId" placeholder="Test ID">
+            <button id="submit">Submit</button>
+            <button id="refresh">
+                <svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"></path>
+                </svg>    
+                Refresh
+            </button>
+        </header>
+        <div id="steps-container">
+            <div id="steps"></div>
+        </div>
+        <div id="controls">
+            <button id="record"><span class="text">Record</span></button>
+            <button id="playback">Playback</button>
+        </div>
+    </div>
+</body>
+</html>
+
+

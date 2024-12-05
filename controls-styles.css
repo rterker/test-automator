@@ -1,0 +1,127 @@
+body {
+  max-width: 600px;
+  margin: 10px auto;
+  padding: 10px;
+}
+.container {
+  border: 2px solid #333;
+  padding: 20px;
+}
+.header {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  
+}
+#testId {
+  font-size: 16px;
+  border-radius: 4px;
+}
+#controls {
+  display: flex;
+  justify-content: space-around;
+}
+#submit, #refresh {
+  font-size: 16px;
+  white-space: nowrap;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.refresh-icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: bottom;
+  margin-right: 4px;
+}
+#record {
+position: relative;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 10px 20px;
+font-size: 16px;
+color: white;
+background-color: #d9534f;
+border: none;
+border-radius: 4px;
+cursor: pointer;
+transition: background-color 0.3s ease;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  background-color: #f9f9f9;
+}
+
+#record {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  font-size: 16px;
+  color: white;
+  background-color: #d9534f;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#record:hover {
+  background-color: #c9302c;
+}
+
+.spinner {
+  display: none; /* Hidden by default */
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+.text {
+  transition: opacity 0.3s ease;
+}
+
+/* Spinner Animation */
+@keyframes spin {
+  from {
+      transform: rotate(0deg);
+  }
+  to {
+      transform: rotate(360deg);
+  }
+}
+
+/* When recording */
+#record.recording {
+  background-color: #5cb85c;
+}
+
+#record.recording .spinner {
+  display: inline-block;
+}
+
+#record.recording .text {
+  opacity: 0.5;
+}
+
+#playback {
+  font-size: 16px;
+  background-color: #0074d9; 
+  color: white; 
+  padding: 10px 20px; 
+  border: 2px solid #333; 
+  border-radius: 4px; 
+  cursor: pointer;
+}
