@@ -8,8 +8,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 path
             };
     
-            if (type === 'INFO') console.log(entry);
-            if (type === 'ERROR') console.error(entry);
+            if (type === 'INFO') {
+                console.log('time: ', entry.time);
+                console.log('path: ', entry.path);
+                console.log('type: ', entry.type);
+                console.log('message: ', entry.message);
+                console.log('============================================');
+              }
+              if (type === 'ERROR') {
+                console.error('time: ', entry.time);
+                console.error('path: ', entry.path);
+                console.error('type: ', entry.type);
+                console.error('message: ', entry.message);
+                console.error('============================================');
+              }
         }
     };
     
@@ -20,8 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   
     const recordButton = document.getElementById('record');
-    const recordingText = document.querySelector('.text');
+    const recordingText = document.querySelector('#recording-text');
     const playbackButton = document.getElementById('playback');
+    const playbackText = document.querySelector('#playback-text');
     const testId = document.getElementById('testId');
     const submit = document.getElementById('submit');
     const refresh = document.getElementById('refresh');  
@@ -82,6 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
     
             if (!playing) {
+                playbackButton.classList.add('playing');
+                playbackText.textContent = 'Playing...';
                 chrome.runtime.sendMessage('start-playback', (response) => {
                     const error = chrome.runtime.lastError;
                     if (error) {
@@ -91,6 +106,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             } else if (playing) {
+                playbackButton.classList.remove('playing');
+                playbackText.textContent = 'Playback';
                 chrome.runtime.sendMessage('stop-playback', (response) => {
                     const error = chrome.runtime.lastError;
                     if (error) {
