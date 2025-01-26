@@ -3,23 +3,30 @@ import { handleContentScriptMessage, handlePopupMessage } from "./modules/messag
 import { logger } from "./modules/logger.js";
 
 const path = import.meta.url;
-let controlWindowTabId;
+let controlWindowId;
 
 chrome.tabs.onCreated.addListener((tab) => {
     initializeTab(tab.id);
     logger.log(`Tab ${tab.id} initialized.`, path)
 });
 
+chrome.windows.onRemoved.addListener((windowId) => {
+    if (windowId === controlWindowId) {
+        controlWindowId = undefined;
+    }
+    logger.log(`Control window id ${windowId} removed`, path);
+});
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log('message sender: ', sender);
     console.log('message: ', message);
     if (message === 'control-window-check') {
-        sendResponse({ controlWindowTabId });
+        sendResponse({ controlWindowId });
     }
 
-    if (message.action === 'add-control-window-tab-id') {
-        controlWindowTabId = message.tabId;
-        logger.log(`Conrol window tab id set to: ${controlWindowTabId}`, path);
+    if (message.action === 'add-control-window-id') {
+        controlWindowId = message.windowId;
+        logger.log(`Conrol window id set to: ${controlWindowId}`, path);
     }
      
     const type = sender.tab?.url.split(":")[0];
