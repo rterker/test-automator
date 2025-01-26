@@ -58,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
           chrome.runtime.sendMessage({ action: 'open-test-window', tabId });
     });
     
+    //TODO: clean up error handling here
     recordButton.addEventListener('click', (event) => {
         chrome.runtime.sendMessage('get-recording-status', (response) => {
             logger.log(`Response received for get-recording-status message.`, path);
@@ -81,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (response.message === 'content-script-recording-started') {
                         logger.log(`Recording started for tab: ${response.tabId}`, path);
                     }
+                    alert(response.alert);
                 });
             } else if (recording) {
                 recordButton.classList.remove('recording');
@@ -93,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (response.message === 'content-script-recording-stopped') {
                         logger.log(`Recording stopped for tab: ${response.tabId}`, path);
                     }
+                    alert(response.alert);
                 });
             } else {
                 logger.log(`Error occured in recordButton event listener: ${chrome.runtime.lastError}`, path, ERROR);
@@ -101,6 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     //TODO: check on playback click whether the starting url is the same as the starting url for the recording. if not, throw an error and don't playback
+    //TODO: clean up error handling here
     playbackButton.addEventListener('click', (event) => {
         chrome.runtime.sendMessage('get-playback-status', (response) => {
             logger.log(`Response received for get-playback-status message.`, path);
@@ -123,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         logger.log(`Playback started for tab: ${response.tabId}`, path);
                     }
+                    alert(response.alert);
                 });
             } else if (playing) {
                 playbackButton.classList.remove('playing');
@@ -134,6 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         logger.log(`Playback stopped for tab: ${response.tabId}`, path);
                     }
+                    alert(response.alert);
                 });
             } else {
                 logger.log(`Error occured in playbackButton event listener: ${chrome.runtime.lastError}`, path, ERROR);

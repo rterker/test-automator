@@ -111,24 +111,20 @@ function activateTestTab() {
     
         if (message.action === 'start-recording') {
             addAllListeners(listeners);
-            alert(`content-script.js: recording started on tab ${message.tabId}`);
-            sendResponse({ tabId: message.tabId, message: 'content-script-recording-started'});
+            sendResponse({ tabId: message.tabId, message: 'content-script-recording-started', alert: `content-script.js: recording started on tab ${message.tabId}` });
         }
         if (message.action === 'stop-recording') {
             removeAllListeners(listeners);
-            alert(`content-script.js: recording stopped on tab ${message.tabId}`);
-            sendResponse({ tabId: message.tabId, message: 'content-script-recording-stopped'});
+            sendResponse({ tabId: message.tabId, message: 'content-script-recording-stopped', alert: `content-script.js: recording stopped on tab ${message.tabId}` });
         }
         if (message.action === 'start-playback') {
-            alert(`content-script.js: playback started on tab ${message.tabId}`);
-            sendResponse({ tabId: message.tabId, message: 'content-script-playback-started'});
+            sendResponse({ tabId: message.tabId, message: 'content-script-playback-started', alert: `content-script.js: playback started on tab ${message.tabId}` });
             console.log(`content-script.js: playbackArray => ${JSON.stringify(message.playbackArray, null, 2)}`);
             startPlayback(message.playbackArray, signalController);
         }
         if (message.action === 'stop-playback') {
             signalController.stopPlayback();
-            alert(`content-script.js: playback stopped on tab ${message.tabId}`);
-            sendResponse({ tabId: message.tabId, message: 'content-script-playback-stopped'});
+            sendResponse({ tabId: message.tabId, message: 'content-script-playback-stopped', alert: `content-script.js: playback stopped on tab ${message.tabId}` });
         }
     });
 }

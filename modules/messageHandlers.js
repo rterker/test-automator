@@ -33,7 +33,7 @@ export function handlePopupMessage(message, sender, sendResponse) {
     const recording = isRecording();
     logger.log(`popupMessage: playing status is ${playing}.`, path);
     logger.log(`popupMessage: recording status is ${recording}.`, path);
-    sendResponse({ tabId: tabId, isPlaying: playing, isRecording: recording });
+    return sendResponse({ tabId: tabId, isPlaying: playing, isRecording: recording });
   }
 
   if (message === 'get-playback-status') {
@@ -42,7 +42,7 @@ export function handlePopupMessage(message, sender, sendResponse) {
     const recording = isRecording();
     logger.log(`popupMessage: playing status is ${playing}.`, path);
     logger.log(`popupMessage: recording status is ${recording}.`, path);
-    sendResponse({ tabId: tabId, isPlaying: playing, isRecording: recording });
+    return sendResponse({ tabId: tabId, isPlaying: playing, isRecording: recording });
   }
 
   if (message === 'start-recording') {
@@ -53,10 +53,10 @@ export function handlePopupMessage(message, sender, sendResponse) {
           initializeRecordingTimer();
       } else {
         response.message = chrome.runtime.lastError;
+        response.alert = `messageHandlers.js: error message received from content-script when attempting to start-recording`;
         logger.log(`messageHandlers.js: error message received from content-script when attempting to start-recording`, path, ERROR);
       }
-      //response sent to popup.js - not doing anything with message in popup currently
-      sendResponse({ tabId: response.tabId, message: response.message });
+      return sendResponse(response);
     });
   }
 
@@ -66,15 +66,15 @@ export function handlePopupMessage(message, sender, sendResponse) {
       setRecordingStatus(false);
       if (response.message !== 'content-script-recording-stopped') {
           response.message = chrome.runtime.lastError;
+          response.alert = `messageHandlers.js: error message received from content-script when attempting to stop-recording`;
           logger.log(`messageHandlers.js: error message received from content-script when attempting to stop-recording`, path, ERROR);
       }
-      //response sent to popup.js - not doing anything with message in popup currently
-      sendResponse({ tabId: response.tabId, message: response.message });
+      return sendResponse(response);
     });
   }
 
   if (message === 'start-playback') {
-    //TODO: actually pass in a real recording id here, not just test. this should come from input in popup
+    //TODO: actually pass in a real recording id here, not just test. this should come from input in controls
     getPlaybackObject('test')
     .then((playbackObject) => {
       const playbackArray = playbackObject['test'].steps;
@@ -85,10 +85,10 @@ export function handlePopupMessage(message, sender, sendResponse) {
           setPlaybackStatus(true);
         } else {
           response.message = chrome.runtime.lastError;
+          response.alert = `messageHandlers.js: error message received from content-script when attempting to start-playback`;
           logger.log(`messageHandlers.js: error message received from content-script when attempting to start-playback`, path, ERROR);
         }
-        //response sent to popup.js - not doing anything with message in popup currently
-        sendResponse({ tabId: response.tabId, message: response.message });
+        return sendResponse(response);
       });
     })
     .catch((err) => {
@@ -102,10 +102,10 @@ export function handlePopupMessage(message, sender, sendResponse) {
       setPlaybackStatus(false);
       if (response.message !== 'content-script-playback-stopped') {
         response.message = chrome.runtime.lastError;
+        response.alert = `messageHandlers.js: error message received from content-script when attempting to stop-playback`;
         logger.log(`messageHandlers.js: error message received from content-script when attempting to stop-playback`, path, ERROR);
       }
-      //response sent to popup.js - not doing anything with message in popup currently
-      sendResponse({ tabId: response.tabId, message: response.message });
+      return sendResponse(response);
     });
   }
 }
