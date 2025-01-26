@@ -38,11 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const openWindow = document.getElementById('open-window');
 
     window.addEventListener('blur', () => {
-        console.log('Control window is now HIDDEN');
         chrome.runtime.sendMessage({ action: 'control-window-hidden' });
     });
     window.addEventListener('focus', () => {
-        console.log('Control window is now IN FOCUS');
         chrome.runtime.sendMessage({ action: 'control-window-focus' });
     });
 

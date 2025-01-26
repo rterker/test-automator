@@ -14,7 +14,7 @@ chrome.windows.onRemoved.addListener((windowId) => {
         logger.log(`Control window id ${windowId} removed`, path);
         logger.log(`Conrol window focus set to: false}`, path);
     }
-    return;
+    return sendResponse({});
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -28,22 +28,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'add-control-window-id') {
         const controlWindowId = setControlWindowId(message.windowId);
         setControlWindowFocus(true);
-        logger.log(`Conrol window id set to: ${controlWindowId}`, path);
-        logger.log(`Conrol window focus set to: true`, path);
-        return;
+        logger.log(`Control window id set to: ${controlWindowId}`, path);
+        logger.log(`Control window focus set to: true`, path);
+        return sendResponse({});
     }
 
     if (message.action === 'control-window-hidden') {
+        logger.log('Control window is now hidden', path);
         setControlWindowFocus(false);
+        return sendResponse({});
     }
     if (message.action === 'control-window-focus') {
+        logger.log('Control window is now in focus', path);
         setControlWindowFocus(true);
+        return sendResponse({});
     }
     if (message.action === 'test-tab-hidden') {
+        logger.log('Test tab is now hidden', path);
         setTabFocusStatus(false);
+        return sendResponse({});
     }
     if (message.action === 'test-tab-focus') {
+        logger.log('Test tab is now in focus', path);
         setTabFocusStatus(true);
+        return sendResponse({});
     }
     
     if (message.action === 'open-test-window') {
@@ -52,7 +60,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         setTestTabId(tabId);
         initializeTestTab(tabId);
         logger.log(`Test tab ${tabId} initialized.`, path)
-        return;
+        return sendResponse({});
     }
      
     const type = sender.tab?.url.split(":")[0];

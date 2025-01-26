@@ -10,13 +10,12 @@ chrome.runtime.sendMessage('is-this-a-test-tab', (response) => {
     if (response === true) {
         //these event listeners seem a little unreliable, so may need to choose another one later, but this is ok for now
         window.addEventListener('blur', () => {
-            console.log('Test tab is now HIDDEN');
             chrome.runtime.sendMessage({ action: 'test-tab-hidden' });
         });
         window.addEventListener('focus', () => {
-            console.log('Test tab is now IN FOCUS');
             chrome.runtime.sendMessage({ action: 'test-tab-focus' });
         });
+        console.log('TEST TAB ACTIVATED');
         activateTestTab();
     } 
     if (response === false) {
@@ -163,11 +162,14 @@ function startPlayback(playbackArray, signalController) {
     const firstEvent = playbackArray[0];
     chrome.runtime.sendMessage('get-tab-info', (response) => {
         console.log(`Playback tabUrl: ${response.tabUrl}`);
+        console.log(`Playback tabId: ${response.tabId}`);
+        console.log(`PlaybackArray firstEvent tabUrl: ${firstEvent.tabUrl}`);
         //TODO: this is not working correctly. i navigate back to starting url and it alerts me to navigate back to starting url
         if (response.tabUrl === firstEvent.tabUrl) {
             continuePlayback(playbackArray, signalController);
         } else {
             chrome.runtime.sendMessage('stop-playback', (response) => {
+                console.log('STOP-PLAYBACK AUTO-INVOKED');
                 if (chrome.runtime.lastError) {
                     console.log(`startPlayback: error occured on stop-playback message from content-script => ${chrome.runtime.lastError}`);
                 } else {

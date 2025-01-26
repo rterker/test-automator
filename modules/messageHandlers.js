@@ -75,6 +75,7 @@ export function handlePopupMessage(message, sender, sendResponse) {
 
   if (message === 'start-playback') {
     //TODO: actually pass in a real recording id here, not just test. this should come from input in controls
+    console.log('IN MESSAGE HANDLERS START-PLAYBACK');
     getPlaybackObject('test')
     .then((playbackObject) => {
       const playbackArray = playbackObject['test'].steps;
@@ -115,7 +116,8 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
   
   const tabId = sender.tab.id;
   const tabUrl = sender.tab.url;
-  const isTestTab = tabId === getTestTabId();
+  const testTabId = getTestTabId();
+  const isTestTab = tabId === testTabId;
 
   if (message === 'is-this-a-test-tab') {
     if (!isTestTab) {
@@ -125,6 +127,9 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
   }
 
   if (message === 'get-tab-info') {
+    logger.log(`handleContentScriptMessage: tabId is ${tabId} and testTabId is ${testTabId}\n
+      handleContentScriptMessage: are we getting tab info for correct tab? ${isTestTab}`, path);
+
     logger.log('messageHandlers.js: sending tab info to content script on initialization: ', path);
     logger.log(`messageHandlers.js: tabId => ${tabId}`, path);
     logger.log(`messageHandlers.js: tabUrl => ${tabUrl}`, path);
