@@ -1,32 +1,38 @@
-import { initializeTab } from "./modules/tabStatus.js";
+import { initializeTestTab, setTestTabId } from "./modules/tabStatus.js";
 import { handleContentScriptMessage, handlePopupMessage } from "./modules/messageHandlers.js";
 import { logger } from "./modules/logger.js";
 
 const path = import.meta.url;
 let controlWindowId;
 
-chrome.tabs.onCreated.addListener((tab) => {
-    initializeTab(tab.id);
-    logger.log(`Tab ${tab.id} initialized.`, path)
-});
-
 chrome.windows.onRemoved.addListener((windowId) => {
     if (windowId === controlWindowId) {
         controlWindowId = undefined;
     }
     logger.log(`Control window id ${windowId} removed`, path);
+    return;
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log('message sender: ', sender);
     console.log('message: ', message);
     if (message === 'control-window-check') {
-        sendResponse({ controlWindowId });
+        return sendResponse({ controlWindowId });
     }
-
+    
     if (message.action === 'add-control-window-id') {
         controlWindowId = message.windowId;
         logger.log(`Conrol window id set to: ${controlWindowId}`, path);
+        return;
+    }
+    
+    if (message.action === 'open-test-window') {
+        const tabId = message.tabId;
+        console.log(`Test window opened with tab id of ${tabId}`);
+        setTestTabId(tabId);
+        initializeTestTab(tabId);
+        logger.log(`Test tab ${tabId} initialized.`, path)
+        return;
     }
      
     const type = sender.tab?.url.split(":")[0];

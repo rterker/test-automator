@@ -44,6 +44,9 @@ document.addEventListener('DOMContentLoaded', () => {
             height: 1200,
             focused: false
           });
+
+          const tabId = newWindow.tabs[0].id;
+          chrome.runtime.sendMessage({ action: 'open-test-window', tabId });
     });
     
     recordButton.addEventListener('click', (event) => {

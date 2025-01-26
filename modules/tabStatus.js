@@ -2,14 +2,23 @@ import { logger } from "./logger.js";
 
 const path = import.meta.url;
 
+let testTabId;
 const tabRecordingStatus = {};
 const tabPlaybackStatus = {};
 
-export function initializeTab(tabId) {
+export function setTestTabId(tabId) {
+    testTabId = tabId;
+}
+
+export function getTestTabId() {
+    return testTabId;
+}
+
+export function initializeTestTab(tabId) {
     tabRecordingStatus[tabId] = false;
     tabPlaybackStatus[tabId] = false;
-    logger.log(`initializeTab: Recording status of ${tabId} is ${tabRecordingStatus[tabId]}`, path);
-    logger.log(`initializeTab: Playback status of ${tabId} is ${tabPlaybackStatus[tabId]}`, path);
+    logger.log(`initializeTestTab: Recording status of ${tabId} is ${tabRecordingStatus[tabId]}`, path);
+    logger.log(`initializeTestTab: Playback status of ${tabId} is ${tabPlaybackStatus[tabId]}`, path);
 }
 
 //TODO: returning undefined
