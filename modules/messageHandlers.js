@@ -29,8 +29,8 @@ export function handlePopupMessage(message, sender, sendResponse) {
 
   if (message === 'get-recording-status') {
     logger.log(`popupMessage: get-recording-status message received.`, path);
-    const playing = isPlaying(tabId);
-    const recording = isRecording(tabId);
+    const playing = isPlaying();
+    const recording = isRecording();
     logger.log(`popupMessage: playing status is ${playing}.`, path);
     logger.log(`popupMessage: recording status is ${recording}.`, path);
     sendResponse({ tabId: tabId, isPlaying: playing, isRecording: recording });
@@ -38,8 +38,8 @@ export function handlePopupMessage(message, sender, sendResponse) {
 
   if (message === 'get-playback-status') {
     logger.log(`popupMessage: get-playback-status message received.`, path);
-    const playing = isPlaying(tabId);
-    const recording = isRecording(tabId);
+    const playing = isPlaying();
+    const recording = isRecording();
     logger.log(`popupMessage: playing status is ${playing}.`, path);
     logger.log(`popupMessage: recording status is ${recording}.`, path);
     sendResponse({ tabId: tabId, isPlaying: playing, isRecording: recording });
@@ -116,6 +116,10 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
   const tabId = sender.tab.id;
   const tabUrl = sender.tab.url;
 
+  if (tabId !== getTestTabId()) {
+    return logger.log(`In handleContentScriptMessage, content-script sender ${tabId} is not the test tab id`, path);
+  }
+
   if (message === 'get-tab-info') {
     logger.log('messageHandlers.js: sending tab info to content script on initialization: ', path);
     logger.log(`messageHandlers.js: tabId => ${tabId}`, path);
@@ -124,10 +128,11 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
   }
   
   //this is important b/c it covers cases where we are still in the same tab, but the window content changed, e.g. following a link
-  //TODO: isRecording returns undefined here when you refresh the page instead of starting a new tab
+  //TODO: isRecording returns undefined here when you refresh the page instead of starting a new tab. 
+  //this to do may not apply anymore since we are now pulling tab id from the set test tab id
   if (message === 'is-recording-already-enabled') {
     logger.log(`messageHandlers.js: checking if recording already enabled for tabId: ${tabId}`, path);
-    const recording = isRecording(tabId);
+    const recording = isRecording();
 
     let response;
     if (recording) {
@@ -156,7 +161,7 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
     }
   }
 
-  if (isRecording(tabId)) {
+  if (isRecording()) {
     return handleRecordingEvents(message, sender, sendResponse);
   } 
 }

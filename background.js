@@ -8,8 +8,8 @@ let controlWindowId;
 chrome.windows.onRemoved.addListener((windowId) => {
     if (windowId === controlWindowId) {
         controlWindowId = undefined;
+        logger.log(`Control window id ${windowId} removed`, path);
     }
-    logger.log(`Control window id ${windowId} removed`, path);
     return;
 });
 
