@@ -27,10 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const path = 'chrome-extension://ofgadbmdeibbpnemdmcnjchnpfpmloop/popup.js';
     const ERROR = 'ERROR';
-    
-    logger.log('popup.js is loading...', path);
-
-  
+     
     const recordButton = document.getElementById('record');
     const recordingText = document.querySelector('#recording-text');
     const playbackButton = document.getElementById('playback');

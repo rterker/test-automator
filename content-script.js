@@ -68,8 +68,6 @@ const listeners = [
     },
 ];
 
-console.log('content-script.js is loading...');
-
 chrome.runtime.sendMessage('is-recording-already-enabled', (response) => {
     if (response === 'recording-enabled') {
         console.log(`content-script.js: content of window changed. confirmed that recording should still be enabled.`);
@@ -144,9 +142,11 @@ function removeAllListeners() {
 }
 
 function startPlayback(playbackArray, signalController) {
+    //TODO: playbackarray[0] is the url of the first event, e.g. click, but it's not where you are when you start recording. it should be
     const firstEvent = playbackArray[0];
     chrome.runtime.sendMessage('get-tab-info', (response) => {
         console.log(`Playback tabUrl: ${response.tabUrl}`);
+        //TODO: this is not working correctly. i navigate back to starting url and it alerts me to navigate back to starting url
         if (response.tabUrl === firstEvent.tabUrl) {
             continuePlayback(playbackArray, signalController);
         } else {

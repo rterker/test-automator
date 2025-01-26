@@ -9,8 +9,6 @@ import {
 
 const path = import.meta.url;
 
-logger.log('recordingStatus.js is loading...', path);
-
 let recordingId = 'test';
 let timer = {};
 

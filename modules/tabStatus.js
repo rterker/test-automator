@@ -2,8 +2,6 @@ import { logger } from "./logger.js";
 
 const path = import.meta.url;
 
-logger.log('tabStatus.js is loading...', path);
-
 const tabRecordingStatus = {};
 const tabPlaybackStatus = {};
 
@@ -14,11 +12,13 @@ export function initializeTab(tabId) {
     logger.log(`initializeTab: Playback status of ${tabId} is ${tabPlaybackStatus[tabId]}`, path);
 }
 
+//TODO: returning undefined
 export function isPlaying(tabId) {
     logger.log(`isPlaying: Playback status of ${tabId} is ${tabPlaybackStatus[tabId]}`, path);
     return tabPlaybackStatus[tabId];
 }
 
+//TODO: returning undefined
 export function isRecording(tabId) {
     logger.log(`isRecording: Recording status of ${tabId} is ${tabRecordingStatus[tabId]}`, path);
     return tabRecordingStatus[tabId];

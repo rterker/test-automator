@@ -25,12 +25,11 @@ const path = import.meta.url;
 export function handlePopupMessage(message, sender, sendResponse) {
   //getting current tab this way since messages from popup don't contain it
   chrome.tabs.query({active: true}, function(tabs) {
-    console.log('tabs: ', JSON.stringify(tabs, null, 2));
+    console.log('All active tabs: ', JSON.stringify(tabs, null, 2));
     //get the 2nd to last accessed tab (the last one is the popup window), which should be the one we want to apply the recording to
     tabs = tabs.sort((a, b) => b.lastAccessed - a.lastAccessed);
-    console.log('tab is: ', JSON.stringify(tabs[1], null, 2));
+    console.log('This is the tab that recording will begin on momentarily: ', JSON.stringify(tabs[1], null, 2));
     const tabId = tabs[1].id;
-
     logger.log(`popupMessage: current tabId is ${tabId}`, path);
     if (message === 'get-recording-status') {
       logger.log(`popupMessage: get-recording-status message received.`, path);
@@ -79,6 +78,7 @@ export function handlePopupMessage(message, sender, sendResponse) {
       getPlaybackObject('test')
       .then((playbackObject) => {
         const playbackArray = playbackObject['test'].steps;
+        console.log('playbackArray object initially:', playbackArray)
         //message sent to content-script
         chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'start-playback', playbackArray }, (response) => {
          if (response.message === 'content-script-playback-started') {

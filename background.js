@@ -3,8 +3,7 @@ import { handleContentScriptMessage, handlePopupMessage } from "./modules/messag
 import { logger } from "./modules/logger.js";
 
 const path = import.meta.url;
-
-logger.log('background.js is loading...', path);
+let controlWindowTabId;
 
 chrome.tabs.onCreated.addListener((tab) => {
     initializeTab(tab.id);
@@ -12,7 +11,18 @@ chrome.tabs.onCreated.addListener((tab) => {
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    const type = sender.tab.url.split(":")[0];
+    console.log('message sender: ', sender);
+    console.log('message: ', message);
+    if (message === 'control-window-check') {
+        sendResponse({ controlWindowTabId });
+    }
+
+    if (message.action === 'add-control-window-tab-id') {
+        controlWindowTabId = message.tabId;
+        logger.log(`Conrol window tab id set to: ${controlWindowTabId}`, path);
+    }
+     
+    const type = sender.tab?.url.split(":")[0];
     if (type === 'chrome-extension') {
         console.log('popup message =>');
         handlePopupMessage(message, sender, sendResponse);
@@ -27,6 +37,5 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return result;
     }
 });
-
 
 
