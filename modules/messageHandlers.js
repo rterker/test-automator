@@ -115,9 +115,13 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
   
   const tabId = sender.tab.id;
   const tabUrl = sender.tab.url;
+  const isTestTab = tabId === getTestTabId();
 
-  if (tabId !== getTestTabId()) {
-    return logger.log(`In handleContentScriptMessage, content-script sender ${tabId} is not the test tab id`, path);
+  if (message === 'is-this-a-test-tab') {
+    if (!isTestTab) {
+      logger.log(`In handleContentScriptMessage, content-script sender ${tabId} is not the test tab id`, path);
+    }
+    return sendResponse(isTestTab);
   }
 
   if (message === 'get-tab-info') {
@@ -144,21 +148,13 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
   }
 
   if (message === 'playback-complete') {
-    if (tabId === getTestTabId()) {
-      setPlaybackStatus(false);
-      return sendResponse({ tabId, message });
-    } else {
-      return sendResponse({ tabId, message: 'wrong-tab'});
-    }
+    setPlaybackStatus(false);
+    return sendResponse({ tabId, message });
   }
 
   if (message === 'stop-playback') {
-    if (tabId === getTestTabId()) {
-      setPlaybackStatus(false);
-      return sendResponse({ tabId, message });
-    } else {
-      return sendResponse({ tabId, message: 'wrong-tab' });
-    }
+    setPlaybackStatus(false);
+    return sendResponse({ tabId, message });
   }
 
   if (isRecording()) {
