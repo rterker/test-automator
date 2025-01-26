@@ -80,10 +80,10 @@ function activateTestTab() {
     chrome.runtime.sendMessage('is-recording-already-enabled', (response) => {
         if (response === 'recording-enabled') {
             console.log(`content-script.js: content of window changed. confirmed that recording should still be enabled.`);
-            addAllListeners();
+            addAllListeners(listeners);
         } else if (response === 'recording-disabled') {
             console.log(`content-script.js: content of window changed. confirmed that recording should still be disabled.`);
-            removeAllListeners();
+            removeAllListeners(listeners);
         }
     });
     
@@ -101,12 +101,12 @@ function activateTestTab() {
         };
     
         if (message.action === 'start-recording') {
-            addAllListeners();
+            addAllListeners(listeners);
             alert(`content-script.js: recording started on tab ${message.tabId}`);
             sendResponse({ tabId: message.tabId, message: 'content-script-recording-started'});
         }
         if (message.action === 'stop-recording') {
-            removeAllListeners();
+            removeAllListeners(listeners);
             alert(`content-script.js: recording stopped on tab ${message.tabId}`);
             sendResponse({ tabId: message.tabId, message: 'content-script-recording-stopped'});
         }
@@ -126,7 +126,7 @@ function activateTestTab() {
 
 
 
-function addAllListeners() {
+function addAllListeners(listeners) {
     listeners.forEach(({ element, eventType, handler }) => {
         //element has length is using querySelectorAll to get elements in listeners
         if (element.length) {
@@ -140,7 +140,7 @@ function addAllListeners() {
     );
 }
 
-function removeAllListeners() {
+function removeAllListeners(listeners) {
     listeners.forEach(({ element, eventType, handler }) => {
         //element has length is using querySelectorAll to get elements in listeners
         if (element.length) {
