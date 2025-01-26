@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     
         const windowId = controlWindow.id;
-        console.log('windowId:', windowId)
         chrome.runtime.sendMessage({ action: 'add-control-window-id', windowId });
       }
     });

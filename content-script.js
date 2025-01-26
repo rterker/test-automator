@@ -8,6 +8,15 @@ window.addEventListener("pageshow", (event) => {
   
 chrome.runtime.sendMessage('is-this-a-test-tab', (response) => {
     if (response === true) {
+        //these event listeners seem a little unreliable, so may need to choose another one later, but this is ok for now
+        window.addEventListener('blur', () => {
+            console.log('Test tab is now HIDDEN');
+            chrome.runtime.sendMessage({ action: 'test-tab-hidden' });
+        });
+        window.addEventListener('focus', () => {
+            console.log('Test tab is now IN FOCUS');
+            chrome.runtime.sendMessage({ action: 'test-tab-focus' });
+        });
         activateTestTab();
     } 
     if (response === false) {

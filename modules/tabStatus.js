@@ -3,6 +3,7 @@ import { logger } from "./logger.js";
 const path = import.meta.url;
 
 let testTabId;
+let tabHasFocus;
 const tabRecordingStatus = {};
 const tabPlaybackStatus = {};
 
@@ -40,5 +41,13 @@ export function setRecordingStatus(status) {
 export function setPlaybackStatus(status) {
     tabPlaybackStatus[testTabId] = status;
     logger.log(`setPlaybackStatus: Playback status of ${testTabId} set to ${status}`, path);
+}
+
+export function setTabFocusStatus(status) {
+    tabHasFocus = status;
+}
+
+export function getTabFocusStatus() {
+    return tabHasFocus;
 }
 
