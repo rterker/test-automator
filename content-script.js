@@ -153,6 +153,8 @@ function startPlayback(playbackArray, signalController) {
             chrome.runtime.sendMessage('stop-playback', (response) => {
                 if (chrome.runtime.lastError) {
                     console.log(`startPlayback: error occured on stop-playback message from content-script => ${chrome.runtime.lastError}`);
+                } else if (response.message === 'wrong-tab') {
+                    alert(`startPlayback: ${response.tabId} is not the test tab`);
                 } else {
                     console.log(`startPlayback: ${response.message} occured on tab ${response.tabId}.`);
                     alert(`Please navigate to starting url before clicking playback.`);
@@ -180,7 +182,12 @@ function continuePlayback(playbackArray, signalController) {
             const timeoutId = setTimeout(() => {
                 //TODO: error handling
                 chrome.runtime.sendMessage('playback-complete', (response) => {
-                    alert(`content-script.js: ${response.message} on tab ${response.tabId}`);
+                    if (response.message !== 'wrong-tab') {
+                        alert(`content-script.js: ${response.message} on tab ${response.tabId}`);
+                    } else {
+                        alert(`content-script.js: tab ${response.tabId} is not the set test tab`);
+                    }
+
                 });
             }, totalInterval + 50);
             signalController.timeoutIds.push(timeoutId);

@@ -21,25 +21,24 @@ export function initializeTestTab(tabId) {
     logger.log(`initializeTestTab: Playback status of ${tabId} is ${tabPlaybackStatus[tabId]}`, path);
 }
 
-//TODO: returning undefined
-export function isPlaying(tabId) {
-    logger.log(`isPlaying: Playback status of ${tabId} is ${tabPlaybackStatus[tabId]}`, path);
-    return tabPlaybackStatus[tabId];
+
+export function isPlaying() {
+    logger.log(`isPlaying: Playback status of ${testTabId} is ${tabPlaybackStatus[testTabId]}`, path);
+    return tabPlaybackStatus[testTabId];
 }
 
-//TODO: returning undefined
-export function isRecording(tabId) {
-    logger.log(`isRecording: Recording status of ${tabId} is ${tabRecordingStatus[tabId]}`, path);
-    return tabRecordingStatus[tabId];
+export function isRecording() {
+    logger.log(`isRecording: Recording status of ${testTabId} is ${tabRecordingStatus[testTabId]}`, path);
+    return tabRecordingStatus[testTabId];
 }
 
-export function setRecordingStatus(tabId, status) {
-    tabRecordingStatus[tabId] = status;
-    logger.log(`setRecordingStatus: Recording status of ${tabId} set to ${status}`, path);
+export function setRecordingStatus(status) {
+    tabRecordingStatus[testTabId] = status;
+    logger.log(`setRecordingStatus: Recording status of ${testTabId} set to ${status}`, path);
 }
 
-export function setPlaybackStatus(tabId, status) {
-    tabPlaybackStatus[tabId] = status;
-    logger.log(`setPlaybackStatus: Playback status of ${tabId} set to ${status}`, path);
+export function setPlaybackStatus(status) {
+    tabPlaybackStatus[testTabId] = status;
+    logger.log(`setPlaybackStatus: Playback status of ${testTabId} set to ${status}`, path);
 }
 
