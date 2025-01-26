@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const controlWindow = await chrome.windows.create({
           url: chrome.runtime.getURL('controls.html'),
           type: 'popup',
-          width: 600,
+          width: 700,
           height: 900,
           focused: true
         });

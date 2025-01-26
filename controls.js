@@ -35,6 +35,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const testId = document.getElementById('testId');
     const submit = document.getElementById('submit');
     const refresh = document.getElementById('refresh');  
+    const openWindow = document.getElementById('open-window');
+
+    openWindow.addEventListener('click', async (event) => {
+        const newWindow = await chrome.windows.create({
+            type: 'normal',
+            width: 1100,
+            height: 1200,
+            focused: false
+          });
+    });
     
     recordButton.addEventListener('click', (event) => {
         chrome.runtime.sendMessage('get-recording-status', (response) => {
