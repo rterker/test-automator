@@ -1,19 +1,18 @@
 import { initializeTestTab, setTestTabId, setTabFocusStatus } from "./modules/tabStatus.js";
+import { setControlWindowId, getControlWindowId, setControlWindowFocus, getControlWindowFocus } from "./modules/controlWindow.js";
 import { handleContentScriptMessage, handlePopupMessage } from "./modules/messageHandlers.js";
 import { logger } from "./modules/logger.js";
 
 const path = import.meta.url;
-let controlWindowId;
-//TODO: will need to clean up how this is being handled, using more encapsulation, etc. all the logic is currently in this module
-let controlWindowFocus = false;
 
 //TODO: probably should turn everything off and reset all statuses etc if the control window is closed
 chrome.windows.onRemoved.addListener((windowId) => {
+    const controlWindowId = getControlWindowId();
     if (windowId === controlWindowId) {
-        controlWindowId = undefined;
-        controlWindowFocus = false;
+        setControlWindowId(undefined);
+        setControlWindowFocus(false);
         logger.log(`Control window id ${windowId} removed`, path);
-        logger.log(`Conrol window focus set to: ${controlWindowFocus}`, path);
+        logger.log(`Conrol window focus set to: false}`, path);
     }
     return;
 });
@@ -22,22 +21,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log('message sender: ', sender);
     console.log('message: ', message);
     if (message === 'control-window-check') {
+        const controlWindowId = getControlWindowId();
         return sendResponse({ controlWindowId });
     }
     
     if (message.action === 'add-control-window-id') {
-        controlWindowId = message.windowId;
-        controlWindowFocus = true;
+        const controlWindowId = setControlWindowId(message.windowId);
+        setControlWindowFocus(true);
         logger.log(`Conrol window id set to: ${controlWindowId}`, path);
-        logger.log(`Conrol window focus set to: ${controlWindowFocus}`, path);
+        logger.log(`Conrol window focus set to: true`, path);
         return;
     }
 
     if (message.action === 'control-window-hidden') {
-        controlWindowFocus = false;
+        setControlWindowFocus(false);
     }
     if (message.action === 'control-window-focus') {
-        controlWindowFocus = true;
+        setControlWindowFocus(true);
     }
     if (message.action === 'test-tab-hidden') {
         setTabFocusStatus(false);
