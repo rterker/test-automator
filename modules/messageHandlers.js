@@ -9,11 +9,12 @@ import {
 import {
   initializeRecordingTimer,
   getRecordingId
-} from "./recordingStatus.js";
+} from "./recording.js";
 
 import { 
   storeEvent,
-  getPlaybackObject
+  getPlaybackObject,
+  storeInitUrl
 } from "./storage.js";
 
 import { 
@@ -51,6 +52,8 @@ export function handlePopupMessage(message, sender, sendResponse) {
       if (response.message === 'content-script-recording-started') {
           setRecordingStatus(true);
           initializeRecordingTimer();
+          //TODO: need to pass recording id and url
+          storeInitUrl();
       } else {
         response.message = chrome.runtime.lastError;
         response.alert = `messageHandlers.js: error message received from content-script when attempting to start-recording`;

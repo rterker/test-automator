@@ -1,6 +1,10 @@
 import { 
   incrementAndGetTime
-} from "./recordingStatus.js";
+} from "./recording.js";
+
+export function storeInitUrl(recordingId, message, sendResponse) {
+
+}
 
 export function storeEvent(recordingId, message, sendResponse) {
   const { time } = message;
