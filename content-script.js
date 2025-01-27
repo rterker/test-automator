@@ -118,8 +118,8 @@ function activateTestTab() {
         }
         if (message.action === 'start-playback') {
             sendResponse({ tabId: message.tabId, message: 'content-script-playback-started', alert: `content-script.js: playback started on tab ${message.tabId}` });
-            console.log(`content-script.js: playbackArray => ${JSON.stringify(message.playbackArray, null, 2)}`);
-            startPlayback(message.playbackArray, signalController);
+            console.log(`content-script.js: playbackObject => ${JSON.stringify(message.playbackObject, null, 2)}`);
+            startPlayback(message.playbackObject, signalController);
         }
         if (message.action === 'stop-playback') {
             signalController.stopPlayback();
@@ -157,16 +157,17 @@ function removeAllListeners(listeners) {
     });
 }
 
-function startPlayback(playbackArray, signalController) {
+function startPlayback(playbackObject, signalController) {
     //TODO: playbackarray[0] is the url of the first event, e.g. click, but it's not where you are when you start recording. it should be
-    const firstEvent = playbackArray[0];
+    const playbackSteps = playbackObject.steps;
+    const initUrl = playbackObject.initUrl;
     chrome.runtime.sendMessage('get-tab-info', (response) => {
         console.log(`Playback tabUrl: ${response.tabUrl}`);
         console.log(`Playback tabId: ${response.tabId}`);
-        console.log(`PlaybackArray firstEvent tabUrl: ${firstEvent.tabUrl}`);
+        console.log(`Playback initUrl: ${initUrl}`);
         //TODO: this is not working correctly. i navigate back to starting url and it alerts me to navigate back to starting url
-        if (response.tabUrl === firstEvent.tabUrl) {
-            continuePlayback(playbackArray, signalController);
+        if (response.tabUrl === initUrl) {
+            continuePlayback(playbackSteps, signalController);
         } else {
             chrome.runtime.sendMessage('stop-playback', (response) => {
                 console.log('STOP-PLAYBACK AUTO-INVOKED');
@@ -181,12 +182,12 @@ function startPlayback(playbackArray, signalController) {
     });
 }
 
-function continuePlayback(playbackArray, signalController) {
+function continuePlayback(playbackSteps, signalController) {
     let totalInterval = 0;
     let index = 0;
-    while (!signalController.shouldStop && index < playbackArray.length) {
+    while (!signalController.shouldStop && index < playbackSteps.length) {
         let timeoutId;
-        const event = playbackArray[index];
+        const event = playbackSteps[index];
         const interval = event.interval;
         totalInterval += interval;
         if (event.action === 'click') {
@@ -195,7 +196,7 @@ function continuePlayback(playbackArray, signalController) {
             timeoutId = setTimeout(generateTyping, totalInterval, event);
         }
         signalController.timeoutIds.push(timeoutId);
-        if (index === playbackArray.length - 1) {
+        if (index === playbackSteps.length - 1) {
             const timeoutId = setTimeout(() => {
                 //TODO: error handling
                 chrome.runtime.sendMessage('playback-complete', (response) => {
