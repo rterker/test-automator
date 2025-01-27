@@ -51,11 +51,10 @@ export function handlePopupMessage(message, sender, sendResponse) {
     //message sent to content-script
     chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'start-recording' }, (response) => {
       if (response.message === 'content-script-recording-started') {
-          setRecordingId('test');
+          const recordingId = setRecordingId('test');
           setRecordingStatus(true);
           initializeRecordingTimer();
-          //TODO: need to pass recording id and url
-          storeInitUrl();
+          storeInitUrl(recordingId, response.tabUrl);
       } else {
         response.message = chrome.runtime.lastError;
         response.alert = `messageHandlers.js: error message received from content-script when attempting to start-recording`;

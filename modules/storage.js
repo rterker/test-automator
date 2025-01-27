@@ -2,8 +2,15 @@ import {
   incrementAndGetTime
 } from "./recording.js";
 
-export function storeInitUrl(recordingId, message, sendResponse) {
-
+export function storeInitUrl(recordingId, initUrl) {
+  chrome.storage.session.set({ [recordingId]: { initUrl } }, function(err) {
+    if (err) {
+      console.error(`Error occured in storeInitUrl: ${err}`);
+    }
+  });
+  chrome.storage.session.get([recordingId], function(data){
+    console.log('storeInitUrl after storage: ', data[recordingId]);
+  });
 }
 
 export function storeEvent(recordingId, message, sendResponse) {

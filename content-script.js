@@ -110,7 +110,7 @@ function activateTestTab() {
     
         if (message.action === 'start-recording') {
             addAllListeners(listeners);
-            sendResponse({ tabId: message.tabId, message: 'content-script-recording-started', alert: `content-script.js: recording started on tab ${message.tabId}` });
+            sendResponse({ tabId: message.tabId, tabUrl: window.location.href, message: 'content-script-recording-started', alert: `content-script.js: recording started on tab ${message.tabId}` });
         }
         if (message.action === 'stop-recording') {
             removeAllListeners(listeners);
