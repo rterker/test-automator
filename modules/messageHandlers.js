@@ -8,7 +8,8 @@ import {
 
 import {
   initializeRecordingTimer,
-  getRecordingId
+  getRecordingId,
+  setRecordingId
 } from "./recording.js";
 
 import { 
@@ -50,6 +51,7 @@ export function handlePopupMessage(message, sender, sendResponse) {
     //message sent to content-script
     chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'start-recording' }, (response) => {
       if (response.message === 'content-script-recording-started') {
+          setRecordingId('test');
           setRecordingStatus(true);
           initializeRecordingTimer();
           //TODO: need to pass recording id and url

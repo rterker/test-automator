@@ -9,8 +9,13 @@ import {
 
 const path = import.meta.url;
 
-let recordingId = 'test';
+let recordingId;
 let timer = {};
+
+export function setRecordingId(id) {
+  recordingId = id;
+  return recordingId;
+}
 
 export function initializeRecordingTimer() {
   const now = Date.now();
