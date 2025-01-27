@@ -21,17 +21,25 @@ export function storeEvent(recordingId, message, sendResponse) {
 
   chrome.storage.session.get([recordingId], function(data){
     const nextStepId = data[recordingId]?.nextStepId ?? 0;
-    console.log('data[recordingId]:', data[recordingId])
-    console.log('nextStepId:', nextStepId)
+    console.log(`recordingId ${recordingId} data:`, data[recordingId])
+    console.log(`recordingId ${recordingId} nextStepId:`, nextStepId)
     entry.stepId = nextStepId;
-    const currentData = data[recordingId]?.steps || [];
-    console.log('currentData:', currentData)
-    const newData = [
-      ...currentData,
+    const currentSteps = data[recordingId]?.steps || [];
+    console.log(`recordingId ${recordingId} steps:`, currentSteps)
+    const newSteps = [
+      ...currentSteps,
       entry
     ];
+
+    const initUrl = data[recordingId].initUrl;
     
-    chrome.storage.session.set({ [recordingId]: { nextStepId: nextStepId + 1, steps: newData } }, function() {
+    const newEntry = {
+      initUrl,
+      nextStepId: nextStepId + 1,
+      steps: newSteps
+    };
+    
+    chrome.storage.session.set({ [recordingId]: newEntry }, function() {
       sendResponse({ ...entry });
     });
   });
