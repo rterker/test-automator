@@ -51,7 +51,7 @@ export function getPlaybackObject(recordingId) {
       if (chrome.runtime.lastError) {
         return reject(chrome.runtime.lastError);
       }
-      return resolve(data);
+      return resolve(data[recordingId]);
     });
   });
 }

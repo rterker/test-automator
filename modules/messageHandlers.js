@@ -84,8 +84,6 @@ export function handlePopupMessage(message, sender, sendResponse) {
     getPlaybackObject(recordingId)
     .then((playbackObject) => {
       console.log('playbackArray object initially:', playbackObject);
-      //the object has a single key of recordingId, so we are grabbing the recordingId object assigned to this key
-      playbackObject = playbackObject[recordingId];
       //message sent to content-script
       chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'start-playback', playbackObject }, (response) => {
         if (response.message === 'content-script-playback-started') {
