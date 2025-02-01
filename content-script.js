@@ -119,7 +119,7 @@ function activateTestTab() {
         if (message.action === 'start-playback') {
             sendResponse({ tabId: message.tabId, message: 'content-script-playback-started', alert: `content-script.js: playback started on tab ${message.tabId}` });
             console.log(`content-script.js: playbackObject => ${JSON.stringify(message.playbackObject, null, 2)}`);
-            startPlayback(message.playbackObject, signalController);
+            startPlayback(message.playbackObject, message.tabId, signalController);
         }
         if (message.action === 'stop-playback') {
             signalController.stopPlayback();
@@ -157,7 +157,7 @@ function removeAllListeners(listeners) {
     });
 }
 
-function startPlayback(playbackObject, signalController) {
+function startPlayback(playbackObject, tabId, signalController) {
     //TODO: playbackarray[0] is the url of the first event, e.g. click, but it's not where you are when you start recording. it should be
     const playbackSteps = playbackObject.steps;
     const initUrl = playbackObject.initUrl;
@@ -167,22 +167,23 @@ function startPlayback(playbackObject, signalController) {
         console.log(`Playback initUrl: ${initUrl}`);
         //TODO: this is not working correctly. i navigate back to starting url and it alerts me to navigate back to starting url
         if (response.tabUrl === initUrl) {
-            continuePlayback(playbackSteps, signalController);
+            continuePlayback(playbackSteps, tabId, signalController);
         } else {
-            chrome.runtime.sendMessage('stop-playback', (response) => {
+            const action = 'auto-stop-playback';
+            const alertMessage = `Please navigate to starting url before clicking playback.`;
+            chrome.runtime.sendMessage({ action, tabId, alertMessage }, (response) => {
                 console.log('STOP-PLAYBACK AUTO-INVOKED');
                 if (chrome.runtime.lastError) {
                     console.log(`startPlayback: error occured on stop-playback message from content-script => ${chrome.runtime.lastError}`);
                 } else {
-                    console.log(`startPlayback: ${response.message} occured on tab ${response.tabId}.`);
-                    alert(`Please navigate to starting url before clicking playback.`);
+                    console.log(`startPlayback: ${response.action} occured on tab ${response.tabId}.`);
                 }
             });
         }
     });
 }
 
-function continuePlayback(playbackSteps, signalController) {
+function continuePlayback(playbackSteps, tabId, signalController) {
     let totalInterval = 0;
     let index = 0;
     while (!signalController.shouldStop && index < playbackSteps.length) {
@@ -199,9 +200,9 @@ function continuePlayback(playbackSteps, signalController) {
         if (index === playbackSteps.length - 1) {
             const timeoutId = setTimeout(() => {
                 //TODO: error handling
-                chrome.runtime.sendMessage('playback-complete', (response) => {
-                    alert(`content-script.js: ${response.message} on tab ${response.tabId}`);
-                });
+                const action = 'playback-complete';
+                const alertMessage = `content-script.js: ${action} on tab ${tabId}`;
+                chrome.runtime.sendMessage({ action, tabId, alertMessage });
             }, totalInterval + 50);
             signalController.timeoutIds.push(timeoutId);
         }

@@ -66,12 +66,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     const type = sender.tab?.url.split(":")[0];
     if (type === 'chrome-extension') {
         console.log('popup message =>');
+        //TODO: wrap this in try catch? use that to reset ui if needed
         handlePopupMessage(message, sender, sendResponse);
         //keep connection open: allows you to call sendResponse async
         return true;
     } 
     if (type === 'http' || type === 'https') {
         console.log('content-script message => ');
+        //TODO: wrap this in try catch? use that to reset ui if needed
         //returning here so that true can be returned when sendResponse needs to respond asynchronously
         const result = handleContentScriptMessage(message, sender, sendResponse);
         console.log('<= end of content-script message');

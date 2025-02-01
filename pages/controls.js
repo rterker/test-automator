@@ -12,6 +12,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const refresh = document.getElementById('refresh');  
     const openWindow = document.getElementById('open-window');
 
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        const { action, tabId, alertMessage } = message;
+
+        switch (action) {
+            case 'playback-complete':
+                playbackButton.classList.remove('playing');
+                playbackText.textContent = 'Playback';
+                alert(alertMessage);
+                break;
+            case 'auto-stop-playback':
+                playbackButton.classList.remove('playing');
+                playbackText.textContent = 'Playback';
+                alert(alertMessage);
+            break;
+        
+            default:
+                break;
+        }
+    });
+
     window.addEventListener('blur', () => {
         chrome.runtime.sendMessage({ action: 'control-window-hidden' });
     });

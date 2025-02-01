@@ -156,14 +156,14 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
     return sendResponse(response);
   }
 
-  if (message === 'playback-complete') {
+  if (message.action === 'playback-complete') {
     setPlaybackStatus(false);
-    return sendResponse({ tabId, message });
+    return sendResponse();
   }
 
-  if (message === 'stop-playback') {
+  if (message.action === 'auto-stop-playback') {
     setPlaybackStatus(false);
-    return sendResponse({ tabId, message });
+    return sendResponse(message);
   }
 
   if (isRecording()) {
