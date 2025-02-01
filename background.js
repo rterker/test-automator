@@ -1,7 +1,7 @@
 import { initializeTestTab, setTestTabId, setTabFocusStatus } from "./modules/tabStatus.js";
 import { setControlWindowId, getControlWindowId, setControlWindowFocus, getControlWindowFocus } from "./modules/controlWindow.js";
 import { handleContentScriptMessage, handlePopupMessage } from "./modules/messageHandlers.js";
-import { logger } from "./modules/logger.js";
+import { logger, ERROR } from "./modules/logger.js";
 
 const path = import.meta.url;
 
@@ -14,7 +14,7 @@ chrome.windows.onRemoved.addListener((windowId) => {
         logger.log(`Control window id ${windowId} removed`, path);
         logger.log(`Conrol window focus set to: false}`, path);
     }
-    return sendResponse({});
+    return;
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

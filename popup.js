@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     chrome.runtime.sendMessage('control-window-check', async ({ controlWindowId }) => {
       if (!controlWindowId) {
         const controlWindow = await chrome.windows.create({
-          url: chrome.runtime.getURL('controls.html'),
+          url: chrome.runtime.getURL('./pages/controls.html'),
           type: 'popup',
           width: 700,
           height: 900,

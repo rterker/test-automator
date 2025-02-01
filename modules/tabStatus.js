@@ -1,4 +1,4 @@
-import { logger } from "./logger.js";
+import { logger, ERROR } from "./logger.js";
 
 const path = import.meta.url;
 

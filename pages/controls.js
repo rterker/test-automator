@@ -1,32 +1,7 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const logger = {
-        log: function(message, path, type = 'INFO') {
-            const entry = {
-                time: new Date().toLocaleString(),
-                type,
-                message,
-                path
-            };
-    
-            if (type === 'INFO') {
-                console.log('time: ', entry.time);
-                console.log('path: ', entry.path);
-                console.log('type: ', entry.type);
-                console.log('message: ', entry.message);
-                console.log('============================================');
-              }
-              if (type === 'ERROR') {
-                console.error('time: ', entry.time);
-                console.error('path: ', entry.path);
-                console.error('type: ', entry.type);
-                console.error('message: ', entry.message);
-                console.error('============================================');
-              }
-        }
-    };
-    
-    const path = 'chrome-extension://ofgadbmdeibbpnemdmcnjchnpfpmloop/popup.js';
-    const ERROR = 'ERROR';
+import { logger, ERROR } from "../modules/logger.js";
+
+document.addEventListener('DOMContentLoaded', () => {  
+    const path = import.meta.url;
      
     const recordButton = document.getElementById('record');
     const recordingText = document.querySelector('#recording-text');
