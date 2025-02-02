@@ -94,19 +94,23 @@ function activateTestTab() {
             removeAllListeners(listeners);
         }
     });
+
+    const signalController = {
+        shouldStop: false,
+        timeoutIds: [],
+        stopPlayback: function() {
+            this.shouldStop = true
+            this.timeoutIds.forEach(id => {
+                console.log('clearing out timeoutId: ', id);
+                clearTimeout(id);
+            });
+            this.timeoutIds = [];
+        }
+    };
     
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log('content-script.js: received message from background');
         
-        const signalController = {
-            shouldStop: false,
-            timeoutIds: [],
-            stopPlayback: function() {
-                this.shouldStop = true
-                this.timeoutIds.forEach(id => clearTimeout(id));
-                this.timeoutIds = [];
-            }
-        };
     
         if (message.action === 'start-recording') {
             addAllListeners(listeners);
