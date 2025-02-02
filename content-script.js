@@ -158,14 +158,12 @@ function removeAllListeners(listeners) {
 }
 
 function startPlayback(playbackObject, tabId, signalController) {
-    //TODO: playbackarray[0] is the url of the first event, e.g. click, but it's not where you are when you start recording. it should be
     const playbackSteps = playbackObject.steps;
     const initUrl = playbackObject.initUrl;
     chrome.runtime.sendMessage('get-tab-info', (response) => {
         console.log(`Playback tabUrl: ${response.tabUrl}`);
         console.log(`Playback tabId: ${response.tabId}`);
         console.log(`Playback initUrl: ${initUrl}`);
-        //TODO: this is not working correctly. i navigate back to starting url and it alerts me to navigate back to starting url
         if (response.tabUrl === initUrl) {
             continuePlayback(playbackSteps, tabId, signalController);
         } else {
@@ -199,6 +197,7 @@ function continuePlayback(playbackSteps, tabId, signalController) {
         signalController.timeoutIds.push(timeoutId);
         if (index === playbackSteps.length - 1) {
             const timeoutId = setTimeout(() => {
+
                 //TODO: error handling
                 const action = 'playback-complete';
                 const alertMessage = `content-script.js: ${action} on tab ${tabId}`;

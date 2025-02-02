@@ -181,8 +181,4 @@ function handleRecordingEvents(message, sender, sendResponse) {
   return true;   
 };
 
-//for all playback:
-//  tabId to check that the playback will be for the correct tab
-//  url to check that the playback will be for the correct url
-//  generate a unique id
 //  TODO LATER: we will have the user input more id info, like title and description
