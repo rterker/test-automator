@@ -26,6 +26,8 @@ import {
 const path = import.meta.url;
 
 export function handlePopupMessage(message, sender, sendResponse) {
+  logger.log(`handlePopupMessage message is: ${message}`, path);
+  
   const tabId = getTestTabId();
   logger.log(`popupMessage: test tabId is ${tabId}`, path);
 
@@ -49,19 +51,25 @@ export function handlePopupMessage(message, sender, sendResponse) {
 
   if (message === 'start-recording') {
     //message sent to content-script
-    chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'start-recording' }, (response) => {
-      if (response.message === 'content-script-recording-started') {
-          const recordingId = setRecordingId('test');
-          setRecordingStatus(true);
-          initializeRecordingTimer();
-          storeInitUrl(recordingId, response.tabUrl);
-      } else {
-        response.message = chrome.runtime.lastError;
-        response.alert = `messageHandlers.js: error message received from content-script when attempting to start-recording`;
-        logger.log(`messageHandlers.js: error message received from content-script when attempting to start-recording`, path, ERROR);
-      }
-      return sendResponse(response);
-    });
+      chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'start-recording' }, (response) => {
+        const error = chrome.runtime.lastError;
+        if (error) {
+          const response = {
+            error: true,
+            message: error.message,
+            alert: `Error received from content-script when attempting to start-recording: ${error.message}`
+          };
+          logger.log(`messageHandlers.js: error message received from content-script when attempting to start-recording: ${error.message}`, path, ERROR);
+          return sendResponse(response);
+        }
+        if (response.message === 'content-script-recording-started') {
+            const recordingId = setRecordingId('test');
+            setRecordingStatus(true);
+            initializeRecordingTimer();
+            storeInitUrl(recordingId, response.tabUrl);
+            return sendResponse(response);
+        } 
+      });
   }
 
   if (message === 'stop-recording') {
@@ -116,7 +124,7 @@ export function handlePopupMessage(message, sender, sendResponse) {
 }
 
 export function handleContentScriptMessage(message, sender, sendResponse) {
-  // console.log(`messageHandlers.js: contentScript message received from ${JSON.stringify(sender, null, 2)}`);
+  logger.log(`handleContentScriptMessage message is: ${message}`, path);
   
   const tabId = sender.tab.id;
   const tabUrl = sender.tab.url;

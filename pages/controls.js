@@ -68,10 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 recordButton.classList.add('recording');
                 recordingText.textContent = 'Recording...';
                 chrome.runtime.sendMessage('start-recording', (response) => {
-                    const error = chrome.runtime.lastError;
-                    if (error) {
-                        logger.log(error, path, ERROR);
-                    } 
+                    if (response.error) {
+                        recordButton.classList.remove('recording');
+                        recordingText.textContent = 'Record';
+                    }
                     if (response.message === 'content-script-recording-started') {
                         logger.log(`Recording started for tab: ${response.tabId}`, path);
                     }
