@@ -15,7 +15,7 @@ export function storeInitUrl(recordingId, initUrl) {
 
 export function storeEvent(recordingId, message, sendResponse) {
   const { time } = message;
-  const entry = createEntry(message);
+  const entry = message;
   const interval = incrementAndGetTime(recordingId, time);
   entry.interval = interval;
 
@@ -54,12 +54,4 @@ export function getPlaybackObject(recordingId) {
       return resolve(data[recordingId]);
     });
   });
-}
-
-function createEntry(messageObject) {
-  const entry = {};
-  for (let key in messageObject) {
-    entry[key] = messageObject[key];
-  }
-  return entry;
 }

@@ -55,7 +55,7 @@ function activateTestTab() {
                 let target = event.target;
                 let time = Date.now();
                 let keyValue = event.key;
-                let code = event.code;
+                let keyCode = event.code;
                 let modifiers = {
                     ctrlKey: event.ctrlKey,
                     shiftKey: event.shiftKey,
@@ -67,7 +67,7 @@ function activateTestTab() {
                 console.log('\n');
                 console.log(`In content-script.js, input target is ${target}`);
                 console.log(`In content-script.js, keyValue pressed is ${keyValue}`);
-                console.log(`In content-script.js, code pressed is ${code}`);
+                console.log(`In content-script.js, code pressed is ${keyCode}`);
                 console.log(`In content-script.js, modifiers pressed are ${JSON.stringify(modifiers, null, 2)}`);
     
                 const tabInfoResponse = await chrome.runtime.sendMessage('get-tab-info');
@@ -76,10 +76,9 @@ function activateTestTab() {
                 console.log(`tabId: ${tabInfoResponse.tabId}`);
                 console.log(`tabUrl: ${tabInfoResponse.tabUrl}`);
                 
-                //TODO: send and store key code and modifiers
-                const keydownResponse = await chrome.runtime.sendMessage({ action: 'keydown', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, keyValue, targetCssSelector, time });
+                const keydownResponse = await chrome.runtime.sendMessage({ action: 'keydown', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, keyValue, keyCode, modifiers, targetCssSelector, time });
                 console.log('keydownResponse:', keydownResponse)
-                console.log(`Keydown! Values stored in background storage => action: ${keydownResponse.action} stepId: ${keydownResponse.stepId} tabId: ${keydownResponse.tabId}, tabUrl: ${keydownResponse.tabUrl}, keyValue: ${keydownResponse.keyValue}, targetCssSelector: ${keydownResponse.targetCssSelector}, interval: ${keydownResponse.interval}`);
+                console.log(`Keydown! Values stored in background storage => action: ${keydownResponse.action} stepId: ${keydownResponse.stepId} tabId: ${keydownResponse.tabId}, tabUrl: ${keydownResponse.tabUrl}, keyValue: ${keydownResponse.keyValue}, keyCode: ${keydownResponse.keyCode}, modifiers: ${keydownResponse.modifiers}, targetCssSelector: ${keydownResponse.targetCssSelector}, interval: ${keydownResponse.interval}`);
                 
                 let endTime = Date.now();
                 console.log(`Round trip operation from keydown to storage to response received back in content script: ${endTime - keydownResponse.time} ms`);
