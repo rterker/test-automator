@@ -214,22 +214,23 @@ function continuePlayback(playbackSteps, tabId, signalController) {
 }
 
 function generateMouseEvent(event) {
-    const { action, interval, x, y, tabUrl, tabId } = event;
+    const { action, interval, x, y, tabUrl, tabId, targetCssSelector } = event;
     if (action === 'click') {
-        clickMouseLeft(x, y);
+        clickMouseLeft(x, y, targetCssSelector);
     }
 }
 
-function clickMouseLeft(x, y) {
+function clickMouseLeft(x, y, cssSelector) {
     const clickEvent = new MouseEvent('click', {
         bubbles: true,
         cancelable: true,
         view: window,
-        clientX: x,    // required - x coordinate relative to viewport
-        clientY: y,    // required - y coordinate relative to viewport
+        // clientX: x,    // required - x coordinate relative to viewport
+        // clientY: y,    // required - y coordinate relative to viewport
         button: 0      // 0=left, 1=middle, 2=right
     });
-    const element = document.elementFromPoint(x, y);
+    // const element = document.elementFromPoint(x, y);
+    const element = document.querySelector(cssSelector);
     element.dispatchEvent(clickEvent);
 }
 
