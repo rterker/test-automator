@@ -54,8 +54,8 @@ function activateTestTab() {
             handler: async function (event) {
                 let target = event.target;
                 let time = Date.now();
-                let keyValue = event.key;
-                let keyCode = event.code;
+                let key = event.key;
+                let code = event.code;
                 let modifiers = {
                     ctrlKey: event.ctrlKey,
                     shiftKey: event.shiftKey,
@@ -66,8 +66,8 @@ function activateTestTab() {
     
                 console.log('\n');
                 console.log(`In content-script.js, input target is ${target}`);
-                console.log(`In content-script.js, keyValue pressed is ${keyValue}`);
-                console.log(`In content-script.js, code pressed is ${keyCode}`);
+                console.log(`In content-script.js, key pressed is ${key}`);
+                console.log(`In content-script.js, code pressed is ${code}`);
                 console.log(`In content-script.js, modifiers pressed are ${JSON.stringify(modifiers, null, 2)}`);
     
                 const tabInfoResponse = await chrome.runtime.sendMessage('get-tab-info');
@@ -76,9 +76,9 @@ function activateTestTab() {
                 console.log(`tabId: ${tabInfoResponse.tabId}`);
                 console.log(`tabUrl: ${tabInfoResponse.tabUrl}`);
                 
-                const keydownResponse = await chrome.runtime.sendMessage({ action: 'keydown', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, keyValue, keyCode, modifiers, targetCssSelector, time });
+                const keydownResponse = await chrome.runtime.sendMessage({ action: 'keydown', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, key, code, modifiers, targetCssSelector, time });
                 console.log('keydownResponse:', keydownResponse)
-                console.log(`Keydown! Values stored in background storage => action: ${keydownResponse.action} stepId: ${keydownResponse.stepId} tabId: ${keydownResponse.tabId}, tabUrl: ${keydownResponse.tabUrl}, keyValue: ${keydownResponse.keyValue}, keyCode: ${keydownResponse.keyCode}, modifiers: ${keydownResponse.modifiers}, targetCssSelector: ${keydownResponse.targetCssSelector}, interval: ${keydownResponse.interval}`);
+                console.log(`Keydown! Values stored in background storage => action: ${keydownResponse.action} stepId: ${keydownResponse.stepId} tabId: ${keydownResponse.tabId}, tabUrl: ${keydownResponse.tabUrl}, key: ${keydownResponse.key}, code: ${keydownResponse.code}, modifiers: ${keydownResponse.modifiers}, targetCssSelector: ${keydownResponse.targetCssSelector}, interval: ${keydownResponse.interval}`);
                 
                 let endTime = Date.now();
                 console.log(`Round trip operation from keydown to storage to response received back in content script: ${endTime - keydownResponse.time} ms`);
@@ -238,40 +238,57 @@ function clickMouseLeft(x, y, cssSelector) {
 //TODO: why does the targetElement.value always reset even if there was something in the text box before playback
 //TODO: handle backspace, space, delete, enter
 function generateTyping(event) {
-    const { action, interval, keyValue, tabUrl, tabId, targetCssSelector } = event;
+    const { action, interval, key, code, modifiers, tabUrl, tabId, targetCssSelector } = event;
     const targetElement = document.querySelector(targetCssSelector); 
 
-    const inputEvent = new InputEvent('input', {
+    // const inputEvent = new InputEvent('input', {
+    //     bubbles: true,
+    //     cancelable: true,
+    //     inputType: 'insertText',
+    //     data: keyValue,
+    // });
+
+    const inputEvent = new InputEvent('input');
+
+    const options = {
+        key,
+        code,
         bubbles: true,
         cancelable: true,
-        inputType: 'insertText',
-        data: keyValue,
-    });
+        composed: true, 
+        ...modifiers
+    };
 
-    const keydownEvent = new KeyboardEvent("keydown", {
-        key: keyValue,        // The key that was pressed
-        // code: "KeyA",    // The physical key on the keyboard
-        // keyCode: 65,     // Deprecated but sometimes needed for older browsers
-        // charCode: 65,    // Deprecated
-        // which: 65,       // Deprecated but used in some older libraries
-        bubbles: true,   // Ensures the event bubbles up the DOM
-        cancelable: true // Allows event.preventDefault() to be called
-    });
+    // const keydownEvent = new KeyboardEvent("keydown", {
+    //     key: keyValue,        // The key that was pressed
+    //     // code: "KeyA",    // The physical key on the keyboard
+    //     // keyCode: 65,     // Deprecated but sometimes needed for older browsers
+    //     // charCode: 65,    // Deprecated
+    //     // which: 65,       // Deprecated but used in some older libraries
+    //     bubbles: true,   // Ensures the event bubbles up the DOM
+    //     cancelable: true, // Allows event.preventDefault() to be called
+    //     composed: true
+    // });
 
-    const keyupEvent = new KeyboardEvent("keyup", { 
-        key: keyValue, 
-        bubbles: true, 
-        cancelable: true 
-    });
+    // const keyupEvent = new KeyboardEvent("keyup", { 
+    //     key: keyValue, 
+    //     bubbles: true, 
+    //     cancelable: true,
+    //     composed: true
+    // });
+
+    const keydownEvent = new KeyboardEvent("keydown", options);
+
+    const keyupEvent = new KeyboardEvent("keyup", options);
         
     // Dispatch the events for any event listeners on the page
     targetElement.dispatchEvent(keydownEvent); 
     
     //update value: this will start the element value back at empty. not sure why
-    const currVal = targetElement.value || '';
-    if (isAlphaNumeric(keyValue)) {
-        targetElement.value = currVal + keyValue;
-    }
+    // const currVal = targetElement.value || '';
+    // if (isAlphaNumeric(key)) {
+    //     targetElement.value = currVal + key;
+    // }
 
     targetElement.dispatchEvent(inputEvent);  
     targetElement.dispatchEvent(keyupEvent);
