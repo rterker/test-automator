@@ -34,15 +34,18 @@ function activateTestTab() {
                 let target = event.target;
                 let time = Date.now();
                 let targetCssSelector = generateCssSelector(target);
+                let cursorPosition = target.selectionStart;
                 const tabInfoResponse = await chrome.runtime.sendMessage('get-tab-info');
 
                 console.log(`content-script.js: click tab info:`);
                 console.log(`tabId: ${tabInfoResponse.tabId}`);
                 console.log(`tabUrl: ${tabInfoResponse.tabUrl}`);
                 
-                const mouseClickResponse = await chrome.runtime.sendMessage({ action: 'click', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, x, y, targetCssSelector, time });
+                const mouseClickResponse = await chrome.runtime.sendMessage({ action: 'click', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, x, y, cursorPosition, targetCssSelector, time });
                 console.log('mouseClickResponse:', mouseClickResponse)
-                console.log(`Mouse clicked! Values stored in background storage => action: ${mouseClickResponse.action} stepId: ${mouseClickResponse.stepId} tabId: ${mouseClickResponse.tabId}, tabUrl: ${mouseClickResponse.tabUrl}, x: ${mouseClickResponse.x}, y: ${mouseClickResponse.y}, targetCssSelector: ${mouseClickResponse.targetCssSelector}, interval: ${mouseClickResponse.interval}`);
+                console.log(`Mouse clicked! Values stored in background storage => action: ${mouseClickResponse.action} stepId: ${mouseClickResponse.stepId} 
+                    tabId: ${mouseClickResponse.tabId}, tabUrl: ${mouseClickResponse.tabUrl}, x: ${mouseClickResponse.x}, y: ${mouseClickResponse.y}, 
+                    cursorPosition: ${mouseClickResponse.cursorPosition}, targetCssSelector: ${mouseClickResponse.targetCssSelector}, interval: ${mouseClickResponse.interval}`);
                 
                 let endTime = Date.now();
                 console.log(`Round trip operation from mouse click to storage to response received back in content script: ${endTime - mouseClickResponse.time} ms`);
@@ -62,6 +65,7 @@ function activateTestTab() {
                     altKey: event.altKey,
                     metaKey: event.metaKey
                 };
+                let cursorPosition = target.selectionStart;
                 let targetCssSelector = generateCssSelector(target);    
     
                 console.log('\n');
@@ -76,9 +80,12 @@ function activateTestTab() {
                 console.log(`tabId: ${tabInfoResponse.tabId}`);
                 console.log(`tabUrl: ${tabInfoResponse.tabUrl}`);
                 
-                const keydownResponse = await chrome.runtime.sendMessage({ action: 'keydown', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, key, code, modifiers, targetCssSelector, time });
+                const keydownResponse = await chrome.runtime.sendMessage({ action: 'keydown', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, key, code, modifiers, cursorPosition, targetCssSelector, time });
                 console.log('keydownResponse:', keydownResponse)
-                console.log(`Keydown! Values stored in background storage => action: ${keydownResponse.action} stepId: ${keydownResponse.stepId} tabId: ${keydownResponse.tabId}, tabUrl: ${keydownResponse.tabUrl}, key: ${keydownResponse.key}, code: ${keydownResponse.code}, modifiers: ${keydownResponse.modifiers}, targetCssSelector: ${keydownResponse.targetCssSelector}, interval: ${keydownResponse.interval}`);
+                console.log(`Keydown! Values stored in background storage => action: ${keydownResponse.action} stepId: ${keydownResponse.stepId} 
+                    tabId: ${keydownResponse.tabId}, tabUrl: ${keydownResponse.tabUrl}, key: ${keydownResponse.key}, code: ${keydownResponse.code}, 
+                    modifiers: ${keydownResponse.modifiers}, cursorPosition: ${keydownResponse.cursorPosition}, targetCssSelector: ${keydownResponse.targetCssSelector}, 
+                    interval: ${keydownResponse.interval}`);
                 
                 let endTime = Date.now();
                 console.log(`Round trip operation from keydown to storage to response received back in content script: ${endTime - keydownResponse.time} ms`);
@@ -238,7 +245,7 @@ function clickMouseLeft(x, y, cssSelector) {
 //TODO: why does the targetElement.value always reset even if there was something in the text box before playback
 //TODO: handle backspace, space, delete, enter
 function generateTyping(event) {
-    const { action, interval, key, code, modifiers, tabUrl, tabId, targetCssSelector } = event;
+    const { action, interval, key, code, modifiers, tabUrl, tabId, cursorPosition, targetCssSelector } = event;
     const targetElement = document.querySelector(targetCssSelector); 
     
     const options = {
@@ -273,7 +280,7 @@ function generateTyping(event) {
     targetElement.dispatchEvent(keydownEvent); 
 
     const dispatch = {
-        'Number': (targetElement, key) => typeNumber(targetElement, key),
+        'Number': (targetElement, key) => typeNumber(targetElement, key, cursorPosition),
         'Letter': (targetElement, key) => typeLetter(targetElement, key),
         'Backspace': (targetElement, key) => handleBackspace(targetElement, key),
         'Delete': (targetElement, key) => handleDelete(targetElement, key),
@@ -364,13 +371,12 @@ function typeLetter() {
 
 }
 
-function typeNumber(element, key) {
+function typeNumber(element, key, cursor) {
     const curr = element.value;
     const length = curr.length;
-    const cursor = element.selectionStart; 
     if (length === 0 || cursor === length) return element.value += key;
-    if (cursor === 0) return  (key + element.value);
-    const firstHalf = currVal.slice(0, cursor);
-    const secondHalf = currVal.slice(cursor);
-    return firstHalf + key + secondHalf;
+    if (cursor === 0) return  element.value = key + element.value;
+    const firstHalf = curr.slice(0, cursor);
+    const secondHalf = curr.slice(cursor);
+    return element.value = firstHalf + key + secondHalf;
 }
