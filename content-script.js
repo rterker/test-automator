@@ -240,16 +240,7 @@ function clickMouseLeft(x, y, cssSelector) {
 function generateTyping(event) {
     const { action, interval, key, code, modifiers, tabUrl, tabId, targetCssSelector } = event;
     const targetElement = document.querySelector(targetCssSelector); 
-
-    // const inputEvent = new InputEvent('input', {
-    //     bubbles: true,
-    //     cancelable: true,
-    //     inputType: 'insertText',
-    //     data: keyValue,
-    // });
-
-    const inputEvent = new InputEvent('input');
-
+    
     const options = {
         key,
         code,
@@ -259,36 +250,37 @@ function generateTyping(event) {
         ...modifiers
     };
 
-    // const keydownEvent = new KeyboardEvent("keydown", {
-    //     key: keyValue,        // The key that was pressed
-    //     // code: "KeyA",    // The physical key on the keyboard
-    //     // keyCode: 65,     // Deprecated but sometimes needed for older browsers
-    //     // charCode: 65,    // Deprecated
-    //     // which: 65,       // Deprecated but used in some older libraries
-    //     bubbles: true,   // Ensures the event bubbles up the DOM
-    //     cancelable: true, // Allows event.preventDefault() to be called
-    //     composed: true
-    // });
+    //return early if element is not text editable
+    const tagName = targetElement.tagName;
+    if (tagName !== 'INPUT' && tagName !== 'TEXTAREA') return console.log(`content-script => generateTyping: target is not a text editable element ${tagName} / ${typeof tagName}`);
+    
+    const isTypeableChar = key.length === 1;
+    
+    let type;
+    if (isTypeableChar) {
+        type = isNumber(key) ? 'Number' : (isLetter(key) ? 'Letter' : 'Other');
+    } else {
+        type = key;
+    }
 
-    // const keyupEvent = new KeyboardEvent("keyup", { 
-    //     key: keyValue, 
-    //     bubbles: true, 
-    //     cancelable: true,
-    //     composed: true
-    // });
+    if (type === 'Other') return console.error('content-script: unknown typeableChar in generateTyping');
 
+    const inputEvent = new InputEvent('input');
     const keydownEvent = new KeyboardEvent("keydown", options);
-
     const keyupEvent = new KeyboardEvent("keyup", options);
-        
+
     // Dispatch the events for any event listeners on the page
     targetElement.dispatchEvent(keydownEvent); 
-    
-    //update value: this will start the element value back at empty. not sure why
-    // const currVal = targetElement.value || '';
-    // if (isAlphaNumeric(key)) {
-    //     targetElement.value = currVal + key;
-    // }
+
+    const dispatch = {
+        'Number': (targetElement, key) => typeNumber(targetElement, key),
+        'Letter': (targetElement, key) => typeLetter(targetElement, key),
+        'Backspace': (targetElement, key) => handleBackspace(targetElement, key),
+        'Delete': (targetElement, key) => handleDelete(targetElement, key),
+        'Enter': (targetElement, key) => handleEnter(targetElement, key),
+    };
+
+    dispatch[type](targetElement, key);
 
     targetElement.dispatchEvent(inputEvent);  
     targetElement.dispatchEvent(keyupEvent);
@@ -345,14 +337,40 @@ function generateCssSelector(target) {
     return path.join(' > ');
 }
 
-function isAlphaNumeric(keyValue) {
-    return (['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'].includes(keyValue.toLowerCase()) || ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].includes(keyValue));
+function isLetter(key) {
+    return ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'].includes(key.toLowerCase());
+}
+
+function isNumber(key) {
+    return ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].includes(key);
 }
 
 function handleBackspace() {
-    
+//dispatch event and remove last character from value
+
+}
+
+function handleDelete() {
+//dispatch event and manually remove character at cursor position
+
 }
 
 function handleEnter() {
+//Dispatch event + handle form submission if needed
 
+}
+
+function typeLetter() {
+
+}
+
+function typeNumber(element, key) {
+    const curr = element.value;
+    const length = curr.length;
+    const cursor = element.selectionStart; 
+    if (length === 0 || cursor === length) return element.value += key;
+    if (cursor === 0) return  (key + element.value);
+    const firstHalf = currVal.slice(0, cursor);
+    const secondHalf = currVal.slice(cursor);
+    return firstHalf + key + secondHalf;
 }
