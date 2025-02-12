@@ -274,9 +274,7 @@ function generateTyping(event) {
     const keydownEvent = new KeyboardEvent("keydown", options);
     const keyupEvent = new KeyboardEvent("keyup", options);
 
-    // Dispatch the events for any event listeners on the page
-    element.dispatchEvent(keydownEvent); 
-
+    
     const dispatch = {
         'Number': () => typeNumber(element, key, cursorPosition),
         'Letter': () => typeLetter(element, key, cursorPosition, modifiers.shiftKey),
@@ -285,7 +283,12 @@ function generateTyping(event) {
         'Delete': () => handleDelete(element, cursorPosition),
         'Enter': () => handleEnter(element),
     };
-
+    
+    if (!dispatch[type]) return;
+    
+    // Dispatch the events for any event listeners on the page
+    element.dispatchEvent(keydownEvent); 
+    
     dispatch[type]();
 
     element.dispatchEvent(inputEvent);  
