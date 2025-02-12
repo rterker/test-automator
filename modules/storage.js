@@ -13,6 +13,11 @@ export function storeInitUrl(recordingId, initUrl) {
   });
 }
 
+//TODO: complete this storage
+export function storeInitialValue(recordingId, cssSelector, value) {
+
+}
+
 export function storeEvent(recordingId, message, sendResponse) {
   const { time } = message;
   const entry = message;

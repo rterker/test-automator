@@ -13,9 +13,15 @@ import {
 } from "./recording.js";
 
 import { 
+  getInitialValue, 
+  setInitialValue 
+} from "./initialValues.js";
+
+import { 
   storeEvent,
   getPlaybackObject,
-  storeInitUrl
+  storeInitUrl,
+  storeInitialValue
 } from "./storage.js";
 
 import { 
@@ -66,6 +72,7 @@ export function handlePopupMessage(message, sender, sendResponse) {
             const recordingId = setRecordingId('test');
             setRecordingStatus(true);
             initializeRecordingTimer();
+            //TODO: should we handle storing initial URL solely in storage? what happens if you stop recording then start again for same recording?
             storeInitUrl(recordingId, response.tabUrl);
             return sendResponse(response);
         } 
@@ -175,6 +182,12 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
   }
 
   if (isRecording()) {
+    //storing initial element value for every element interaction during recording
+    if (message.value && !getInitialValue(message.targetCssSelector)) {
+      //in memory storage rather than getting from long term memory every time we do the above check
+      setInitialValue(message.targetCssSelector, message.value);
+      storeInitialValue(getRecordingId(), message.targetCssSelector, message.value);
+    }
     return handleRecordingEvents(message, sender, sendResponse);
   } 
 }
