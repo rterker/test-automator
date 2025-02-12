@@ -265,12 +265,10 @@ function generateTyping(event) {
     
     let type;
     if (isTypeableChar) {
-        type = isNumber(key) ? 'Number' : (isLetter(key) ? 'Letter' : 'Other');
+        type = isNumber(key) ? 'Number' : (isLetter(key) ? 'Letter' : 'Symbol');
     } else {
         type = key;
     }
-
-    if (type === 'Other') return console.error('content-script: unknown typeableChar in generateTyping');
 
     const inputEvent = new InputEvent('input');
     const keydownEvent = new KeyboardEvent("keydown", options);
@@ -282,6 +280,7 @@ function generateTyping(event) {
     const dispatch = {
         'Number': () => typeNumber(element, key, cursorPosition),
         'Letter': () => typeLetter(element, key, cursorPosition),
+        'Symbol': () => typeSymbol(element, key, cursorPosition),
         'Backspace': () => handleBackspace(element, cursorPosition),
         'Delete': () => handleDelete(element, cursorPosition),
         'Enter': () => handleEnter(element),
@@ -363,13 +362,17 @@ function handleDelete(element, cursor) {
     return element.value = element.value.slice(0, cursor) + element.value.slice(cursor + 1);
 }
 
-function handleEnter(element) {
-//Dispatch event + handle form submission if needed
-
+function typeLetter(element, key, cursor) {
+//handle upper and lowercase
 }
 
-function typeLetter() {
-
+function typeSymbol(element, key, cursor) {
+    const length = element.value.length;
+    if (length === 0 || cursor === length) return element.value += key;
+    if (cursor === 0) return  element.value = key + element.value;
+    const first = element.value.slice(0, cursor);
+    const second = element.value.slice(cursor);
+    return element.value = first + key + second;
 }
 
 function typeNumber(element, key, cursor) {
@@ -379,4 +382,9 @@ function typeNumber(element, key, cursor) {
     const first = element.value.slice(0, cursor);
     const second = element.value.slice(cursor);
     return element.value = first + key + second;
+}
+
+function handleEnter(element) {
+//Dispatch event + handle form submission if needed
+
 }
