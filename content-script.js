@@ -32,21 +32,14 @@ function activateTestTab() {
                 let x = event.clientX;
                 let y = event.clientY;
                 let target = event.target;
+                let tagName = target.tagName;
                 let time = Date.now();
                 let targetCssSelector = generateCssSelector(target);
                 let cursorPosition = target.selectionStart;
-                const tabInfoResponse = await chrome.runtime.sendMessage('get-tab-info');
-
-                console.log(`content-script.js: click tab info:`);
-                console.log(`tabId: ${tabInfoResponse.tabId}`);
-                console.log(`tabUrl: ${tabInfoResponse.tabUrl}`);
-                
-                const mouseClickResponse = await chrome.runtime.sendMessage({ action: 'click', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, x, y, cursorPosition, targetCssSelector, time });
+                const tabInfoResponse = await chrome.runtime.sendMessage('get-tab-info');                
+                const mouseClickResponse = await chrome.runtime.sendMessage({ action: 'click', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, tagName, x, y, cursorPosition, targetCssSelector, time });
                 console.log('mouseClickResponse:', mouseClickResponse)
-                console.log(`Mouse clicked! Values stored in background storage => action: ${mouseClickResponse.action} stepId: ${mouseClickResponse.stepId} \
-                    tabId: ${mouseClickResponse.tabId}, tabUrl: ${mouseClickResponse.tabUrl}, x: ${mouseClickResponse.x}, y: ${mouseClickResponse.y}, \
-                    cursorPosition: ${mouseClickResponse.cursorPosition}, targetCssSelector: ${mouseClickResponse.targetCssSelector}, interval: ${mouseClickResponse.interval}`);
-                
+                console.log(`Mouse clicked! Values stored in background storage => action: ${mouseClickResponse.action}, stepId: ${mouseClickResponse.stepId}, tabId: ${mouseClickResponse.tabId}, tabUrl: ${mouseClickResponse.tabUrl}, tagName: ${mouseClickResponse.tagName}, x: ${mouseClickResponse.x}, y: ${mouseClickResponse.y}, cursorPosition: ${mouseClickResponse.cursorPosition}, targetCssSelector: ${mouseClickResponse.targetCssSelector}, interval: ${mouseClickResponse.interval}`);
                 let endTime = Date.now();
                 console.log(`Round trip operation from mouse click to storage to response received back in content script: ${endTime - mouseClickResponse.time} ms`);
             }
@@ -56,6 +49,7 @@ function activateTestTab() {
             eventType: 'keydown',
             handler: async function (event) {
                 let target = event.target;
+                let tagName = target.tagName;
                 let time = Date.now();
                 let key = event.key;
                 let code = event.code;
@@ -67,26 +61,10 @@ function activateTestTab() {
                 };
                 let cursorPosition = target.selectionStart;
                 let targetCssSelector = generateCssSelector(target);    
-    
-                console.log('\n');
-                console.log(`In content-script.js, input target is ${target}`);
-                console.log(`In content-script.js, key pressed is ${key}`);
-                console.log(`In content-script.js, code pressed is ${code}`);
-                console.log(`In content-script.js, modifiers pressed are ${JSON.stringify(modifiers, null, 2)}`);
-    
                 const tabInfoResponse = await chrome.runtime.sendMessage('get-tab-info');
-    
-                console.log(`content-script.js: input tab info:`);
-                console.log(`tabId: ${tabInfoResponse.tabId}`);
-                console.log(`tabUrl: ${tabInfoResponse.tabUrl}`);
-                
-                const keydownResponse = await chrome.runtime.sendMessage({ action: 'keydown', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, key, code, modifiers, cursorPosition, targetCssSelector, time });
+                const keydownResponse = await chrome.runtime.sendMessage({ action: 'keydown', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, tagName, key, code, modifiers, cursorPosition, targetCssSelector, time });
                 console.log('keydownResponse:', keydownResponse)
-                console.log(`Keydown! Values stored in background storage => action: ${keydownResponse.action} stepId: ${keydownResponse.stepId} \
-                    tabId: ${keydownResponse.tabId}, tabUrl: ${keydownResponse.tabUrl}, key: ${keydownResponse.key}, code: ${keydownResponse.code}, \
-                    modifiers: ${keydownResponse.modifiers}, cursorPosition: ${keydownResponse.cursorPosition}, targetCssSelector: ${keydownResponse.targetCssSelector}, 
-                    interval: ${keydownResponse.interval}`);
-                
+                console.log(`Keydown! Values stored in background storage => action: ${keydownResponse.action}, stepId: ${keydownResponse.stepId}, tabId: ${keydownResponse.tabId}, tabUrl: ${keydownResponse.tabUrl}, tagName: ${keydownResponse.tagName}, key: ${keydownResponse.key}, code: ${keydownResponse.code}, modifiers: ${keydownResponse.modifiers}, cursorPosition: ${keydownResponse.cursorPosition}, targetCssSelector: ${keydownResponse.targetCssSelector}, interval: ${keydownResponse.interval}`);
                 let endTime = Date.now();
                 console.log(`Round trip operation from keydown to storage to response received back in content script: ${endTime - keydownResponse.time} ms`);
             }
