@@ -43,8 +43,8 @@ function activateTestTab() {
                 
                 const mouseClickResponse = await chrome.runtime.sendMessage({ action: 'click', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, x, y, cursorPosition, targetCssSelector, time });
                 console.log('mouseClickResponse:', mouseClickResponse)
-                console.log(`Mouse clicked! Values stored in background storage => action: ${mouseClickResponse.action} stepId: ${mouseClickResponse.stepId} 
-                    tabId: ${mouseClickResponse.tabId}, tabUrl: ${mouseClickResponse.tabUrl}, x: ${mouseClickResponse.x}, y: ${mouseClickResponse.y}, 
+                console.log(`Mouse clicked! Values stored in background storage => action: ${mouseClickResponse.action} stepId: ${mouseClickResponse.stepId} \
+                    tabId: ${mouseClickResponse.tabId}, tabUrl: ${mouseClickResponse.tabUrl}, x: ${mouseClickResponse.x}, y: ${mouseClickResponse.y}, \
                     cursorPosition: ${mouseClickResponse.cursorPosition}, targetCssSelector: ${mouseClickResponse.targetCssSelector}, interval: ${mouseClickResponse.interval}`);
                 
                 let endTime = Date.now();
@@ -82,8 +82,8 @@ function activateTestTab() {
                 
                 const keydownResponse = await chrome.runtime.sendMessage({ action: 'keydown', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, key, code, modifiers, cursorPosition, targetCssSelector, time });
                 console.log('keydownResponse:', keydownResponse)
-                console.log(`Keydown! Values stored in background storage => action: ${keydownResponse.action} stepId: ${keydownResponse.stepId} 
-                    tabId: ${keydownResponse.tabId}, tabUrl: ${keydownResponse.tabUrl}, key: ${keydownResponse.key}, code: ${keydownResponse.code}, 
+                console.log(`Keydown! Values stored in background storage => action: ${keydownResponse.action} stepId: ${keydownResponse.stepId} \
+                    tabId: ${keydownResponse.tabId}, tabUrl: ${keydownResponse.tabUrl}, key: ${keydownResponse.key}, code: ${keydownResponse.code}, \
                     modifiers: ${keydownResponse.modifiers}, cursorPosition: ${keydownResponse.cursorPosition}, targetCssSelector: ${keydownResponse.targetCssSelector}, 
                     interval: ${keydownResponse.interval}`);
                 
@@ -246,7 +246,7 @@ function clickMouseLeft(x, y, cssSelector) {
 //TODO: handle backspace, space, delete, enter
 function generateTyping(event) {
     const { action, interval, key, code, modifiers, tabUrl, tabId, cursorPosition, targetCssSelector } = event;
-    const targetElement = document.querySelector(targetCssSelector); 
+    const element = document.querySelector(targetCssSelector); 
     
     const options = {
         key,
@@ -258,7 +258,7 @@ function generateTyping(event) {
     };
 
     //return early if element is not text editable
-    const tagName = targetElement.tagName;
+    const tagName = element.tagName;
     if (tagName !== 'INPUT' && tagName !== 'TEXTAREA') return console.log(`content-script => generateTyping: target is not a text editable element ${tagName} / ${typeof tagName}`);
     
     const isTypeableChar = key.length === 1;
@@ -277,20 +277,20 @@ function generateTyping(event) {
     const keyupEvent = new KeyboardEvent("keyup", options);
 
     // Dispatch the events for any event listeners on the page
-    targetElement.dispatchEvent(keydownEvent); 
+    element.dispatchEvent(keydownEvent); 
 
     const dispatch = {
-        'Number': (targetElement, key) => typeNumber(targetElement, key, cursorPosition),
-        'Letter': (targetElement, key) => typeLetter(targetElement, key),
-        'Backspace': (targetElement, key) => handleBackspace(targetElement, key),
-        'Delete': (targetElement, key) => handleDelete(targetElement, key),
-        'Enter': (targetElement, key) => handleEnter(targetElement, key),
+        'Number': (element, key) => typeNumber(element, key, cursorPosition),
+        'Letter': (element, key) => typeLetter(element, key),
+        'Backspace': (element, key) => handleBackspace(element, key, cursorPosition),
+        'Delete': (element, key) => handleDelete(element, key),
+        'Enter': (element, key) => handleEnter(element, key),
     };
 
-    dispatch[type](targetElement, key);
+    dispatch[type](element, key);
 
-    targetElement.dispatchEvent(inputEvent);  
-    targetElement.dispatchEvent(keyupEvent);
+    element.dispatchEvent(inputEvent);  
+    element.dispatchEvent(keyupEvent);
 }
 
 
@@ -352,8 +352,9 @@ function isNumber(key) {
     return ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].includes(key);
 }
 
-function handleBackspace() {
-//dispatch event and remove last character from value
+function handleBackspace(element, key, cursor) {
+    if (cursor === 0) return;
+    return element.value = element.value.slice(0, cursor - 1) + element.value.slice(cursor);
 
 }
 
@@ -372,11 +373,10 @@ function typeLetter() {
 }
 
 function typeNumber(element, key, cursor) {
-    const curr = element.value;
-    const length = curr.length;
+    const length = element.value.length;
     if (length === 0 || cursor === length) return element.value += key;
     if (cursor === 0) return  element.value = key + element.value;
-    const firstHalf = curr.slice(0, cursor);
-    const secondHalf = curr.slice(cursor);
-    return element.value = firstHalf + key + secondHalf;
+    const first = element.value.slice(0, cursor);
+    const second = element.value.slice(cursor);
+    return element.value = first + key + second;
 }
