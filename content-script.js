@@ -280,14 +280,14 @@ function generateTyping(event) {
     element.dispatchEvent(keydownEvent); 
 
     const dispatch = {
-        'Number': (element, key) => typeNumber(element, key, cursorPosition),
-        'Letter': (element, key) => typeLetter(element, key),
-        'Backspace': (element, key) => handleBackspace(element, key, cursorPosition),
-        'Delete': (element, key) => handleDelete(element, key),
-        'Enter': (element, key) => handleEnter(element, key),
+        'Number': () => typeNumber(element, key, cursorPosition),
+        'Letter': () => typeLetter(element, key, cursorPosition),
+        'Backspace': () => handleBackspace(element, cursorPosition),
+        'Delete': () => handleDelete(element, cursorPosition),
+        'Enter': () => handleEnter(element),
     };
 
-    dispatch[type](element, key);
+    dispatch[type]();
 
     element.dispatchEvent(inputEvent);  
     element.dispatchEvent(keyupEvent);
@@ -352,18 +352,18 @@ function isNumber(key) {
     return ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].includes(key);
 }
 
-function handleBackspace(element, key, cursor) {
+function handleBackspace(element, cursor) {
     if (cursor === 0) return;
     return element.value = element.value.slice(0, cursor - 1) + element.value.slice(cursor);
 
 }
 
-function handleDelete() {
-//dispatch event and manually remove character at cursor position
-
+function handleDelete(element, cursor) {
+    if (cursor === element.value.length) return;
+    return element.value = element.value.slice(0, cursor) + element.value.slice(cursor + 1);
 }
 
-function handleEnter() {
+function handleEnter(element) {
 //Dispatch event + handle form submission if needed
 
 }
