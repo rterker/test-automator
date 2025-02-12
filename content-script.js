@@ -279,7 +279,7 @@ function generateTyping(event) {
 
     const dispatch = {
         'Number': () => typeNumber(element, key, cursorPosition),
-        'Letter': () => typeLetter(element, key, cursorPosition),
+        'Letter': () => typeLetter(element, key, cursorPosition, modifiers.shiftKey),
         'Symbol': () => typeSymbol(element, key, cursorPosition),
         'Backspace': () => handleBackspace(element, cursorPosition),
         'Delete': () => handleDelete(element, cursorPosition),
@@ -362,8 +362,15 @@ function handleDelete(element, cursor) {
     return element.value = element.value.slice(0, cursor) + element.value.slice(cursor + 1);
 }
 
-function typeLetter(element, key, cursor) {
-//handle upper and lowercase
+function typeLetter(element, key, cursor, shift) {
+    //handle caps lock cap letters
+    const length = element.value.length;
+    if (shift) key = key.toUpperCase();
+    if (length === 0 || cursor === length) return element.value += key;
+    if (cursor === 0) return  element.value = key + element.value;
+    const first = element.value.slice(0, cursor);
+    const second = element.value.slice(cursor);
+    return element.value = first + key + second;
 }
 
 function typeSymbol(element, key, cursor) {
