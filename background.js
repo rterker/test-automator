@@ -18,8 +18,6 @@ chrome.windows.onRemoved.addListener((windowId) => {
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log('message sender: ', sender);
-    console.log('message: ', message);
     if (message === 'control-window-check') {
         const controlWindowId = getControlWindowId();
         return sendResponse({ controlWindowId });
@@ -56,7 +54,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     
     if (message.action === 'open-test-window') {
         const tabId = message.tabId;
-        console.log(`Test window opened with tab id of ${tabId}`);
         setTestTabId(tabId);
         initializeTestTab(tabId);
         logger.log(`Test tab ${tabId} initialized.`, path)
@@ -69,6 +66,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         //TODO: wrap this in try catch? use that to reset ui if needed
         handlePopupMessage(message, sender, sendResponse);
         //keep connection open: allows you to call sendResponse async
+        console.log('<= end of popup message');
         return true;
     } 
     if (type === 'http' || type === 'https') {

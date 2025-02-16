@@ -13,21 +13,18 @@ import {
 } from "./recording.js";
 
 import { 
-  getInitialValue, 
-  setInitialValue 
-} from "./initialValues.js";
-
-import { 
-  storeEvent,
   getPlaybackObject,
   storeInitUrl,
-  storeInitialValue
 } from "./storage.js";
 
 import { 
   logger,
   ERROR
  } from "./logger.js";
+
+ import { 
+  sendToQueue
+} from "./queue.js";
 
 const path = import.meta.url;
 
@@ -182,22 +179,17 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
   }
 
   if (isRecording()) {
-    //storing initial element value for every element interaction during recording
-    if (message.value && !getInitialValue(message.targetCssSelector)) {
-      //in memory storage rather than getting from long term memory every time we do the above check
-      setInitialValue(message.targetCssSelector, message.value);
-      storeInitialValue(getRecordingId(), message.targetCssSelector, message.value);
-    }
     return handleRecordingEvents(message, sender, sendResponse);
   } 
 }
 
 function handleRecordingEvents(message, sender, sendResponse) {
-  console.log('messageHandlers.js message from content-script: ', message);
   const recordingId = getRecordingId();
-
-  storeEvent(recordingId, message, sendResponse);
-
+  sendToQueue({
+    recordingId,
+    message,
+    sendResponse
+  });
   //handle sendResponse for recording events asynchronously, as the storage api is async
   return true;   
 };
