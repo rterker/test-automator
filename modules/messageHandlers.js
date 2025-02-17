@@ -15,6 +15,8 @@ import {
 import { 
   getPlaybackObject,
   storeInitUrl,
+  storeInitialValue,
+  storeEvent
 } from "./storage.js";
 
 import { 
@@ -22,9 +24,10 @@ import {
   ERROR
  } from "./logger.js";
 
- import { 
-  sendToQueue
-} from "./queue.js";
+import { 
+  getInitialValue, 
+  setInitialValue 
+} from "./initialValues.js";
 
 const path = import.meta.url;
 
@@ -185,11 +188,36 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
 
 function handleRecordingEvents(message, sender, sendResponse) {
   const recordingId = getRecordingId();
-  sendToQueue({
-    recordingId,
-    message,
-    sendResponse
-  });
+  const queue = [];
+
+  //when you are done running, call next: next is a method that will dequeue and call the next in line
+  //probably need to pass args to queue[0]()
+  function next() {
+    queue.shift();
+    const nextFunc = queue[0];
+    if (nextFunc) nextFunc();
+  }
+
+  function start() {
+    queue[0]();
+  }
+
+  const length = queue.length;
+
+  //storing initial element value for every element interaction during recording
+  if (message.value && !getInitialValue(message.targetCssSelector)) {
+    //in memory storage rather than getting from long term memory every time we do the above check
+    setInitialValue(message.targetCssSelector, message.value);
+    queue.push(() => storeInitialValue(recordingId, message, next),() => storeEvent(recordingId, message, sendResponse, next));
+    if (length === 0) {
+      start();
+    }
+  } else {
+    queue.push(() => storeEvent(recordingId, message, sendResponse, next));
+    if (length === 0) {
+      start();
+    } 
+  }
   //handle sendResponse for recording events asynchronously, as the storage api is async
   return true;   
 };

@@ -12,13 +12,13 @@ export function storeInitUrl(recordingId, initUrl) {
 }
 
 //TODO: complete this storage
-export function storeInitialValue({ recordingId, message, next }, callback) {
+export function storeInitialValue(recordingId, message, next) {
   const { cssSelector, value } = message;
   const entry = {
     [cssSelector] : value
   };
   chrome.storage.session.get(recordingId, function(data) {
-    console.log(`storeInitialValue: entry is ${entry}`);
+    console.log(`storeInitialValue: entry is ${JSON.stringify(entry, null, 2)}`);
     const recordingObject = data[recordingId] ?? {};
     const initialValues = recordingObject?.initialValues ?? {};
     const newInitialValues = {
@@ -32,18 +32,16 @@ export function storeInitialValue({ recordingId, message, next }, callback) {
       initialValues: newInitialValues
     };
     
-    console.log('storeInitialValue: newRecordingObject is', newRecordingObject)
+    console.log('storeInitialValue: newRecordingObject is', JSON.stringify(entry, null, 2))
 
     chrome.storage.session.set({ [recordingId]: newRecordingObject }, function() {
-      console.log(`storeInitialValue set value afterwards: ${{ [recordingId]: newRecordingObject }}`);
-      console.log(`Calling callback with next: ${next}`);
-      callback(next);
+      console.log(`storeInitialValue set value afterwards: ${JSON.stringify({ [recordingId]: newRecordingObject }, null, 2)}`);
+      next();
     });
   });
-
 }
 
-export function storeEvent(recordingId, message, sendResponse) {
+export function storeEvent(recordingId, message, sendResponse, next) {
   const { time } = message;
   const entry = message;
   const interval = incrementAndGetTime(recordingId, time);
@@ -71,6 +69,7 @@ export function storeEvent(recordingId, message, sendResponse) {
     
     chrome.storage.session.set({ [recordingId]: newEntry }, function() {
       sendResponse({ ...entry });
+      next();
     });
   });
 }
