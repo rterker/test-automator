@@ -47,12 +47,12 @@ export function storeEvent(recordingId, message, sendResponse, next) {
   entry.interval = interval;
 
   chrome.storage.session.get(recordingId, function(data){
+    const currentData = data[recordingId];
     const nextStepId = data[recordingId]?.nextStepId ?? 0;
-    console.log(`recordingId ${recordingId} data before update:`, JSON.stringify(data[recordingId], null, 2));
-    console.log(`recordingId ${recordingId} nextStepId being assigned to current update:`, JSON.stringify(nextStepId, null, 2));
+    console.log(`storeEvent: recordingId ${recordingId} data before update:`, JSON.stringify(data[recordingId], null, 2));
+    console.log(`storeEvent: recordingId ${recordingId} nextStepId being assigned to current update:`, JSON.stringify(nextStepId, null, 2));
     entry.stepId = nextStepId;
     const currentSteps = data[recordingId]?.steps || [];
-    console.log(`recordingId ${recordingId} steps before update:`, JSON.stringify(currentSteps, null, 2));
     const newSteps = [
       ...currentSteps,
       entry
@@ -61,13 +61,13 @@ export function storeEvent(recordingId, message, sendResponse, next) {
     const initUrl = data[recordingId].initUrl;
     
     const newEntry = {
-      initUrl,
+      ...currentData,
       nextStepId: nextStepId + 1,
       steps: newSteps
     };
     
     chrome.storage.session.set({ [recordingId]: newEntry }, function() {
-    console.log(`recordingId ${recordingId} object after update:`, JSON.stringify({ [recordingId]: newEntry }, null, 2));
+    console.log(`storeEvent: recordingId ${recordingId} object after update:`, JSON.stringify({ [recordingId]: newEntry }, null, 2));
       sendResponse({ ...entry });
       next();
     });
