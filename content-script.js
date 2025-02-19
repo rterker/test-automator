@@ -26,6 +26,26 @@ chrome.runtime.sendMessage('is-this-a-test-tab', (response) => {
 function activateTestTab() {
     const listeners = [
         {
+            element: document,
+            eventType: 'focus',
+            handler: async function (event) {
+                let target = event.target;
+                let tagName = target.tagName;
+                const elementsWithAValue = ['INPUT', 'TEXTAREA', 'SELECT', 'OPTION', 'METER', 'PROGRESS', 'LI'];
+                if (elementsWithAValue.includes(tagName)) {
+                    let targetCssSelector = generateCssSelector(target);
+                    //TODO: do we need to identify the tab and url to make sure we are identifying the element on the right page?
+                    const tabInfoResponse = await chrome.runtime.sendMessage('get-tab-info');
+                    const elementValue = target.value;
+                    const focusResponse = await chrome.runtime.sendMessage({ action: 'focus', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, tagName, targetCssSelector, elementValue });
+                    console.log('focusResponse:', focusResponse)
+                    console.log(`Focus! Values stored in background storage => action: ${focusResponse.action}, tabId: ${focusResponse.tabId}, tabUrl: ${focusResponse.tabUrl}, tagName: ${focusResponse.tagName}, targetCssSelector: ${focusResponse.targetCssSelector}, initialValue: ${focusResponse.intialValue}`);
+                    let endTime = Date.now();
+                    console.log(`Round trip operation from focus to storage to response received back in content script: ${endTime - focusResponse.time} ms`);
+                }
+            }
+        },
+        {
             element: document, 
             eventType: 'click', 
             handler: async function (event) {
@@ -49,6 +69,7 @@ function activateTestTab() {
             eventType: 'keydown',
             handler: async function (event) {
                 let target = event.target;
+                console.log('content-script: keydown event target object:', target);
                 let tagName = target.tagName;
                 let time = Date.now();
                 let key = event.key;
@@ -141,9 +162,16 @@ function addAllListeners(listeners) {
         //element has length is using querySelectorAll to get elements in listeners
         if (element.length) {
             element.forEach(el => {
+                if (eventType === 'focus') {
+                    //NOTE: passing true to capture event during capture phase 
+                    return el.addEventListener(eventType, handler, true);
+                }
                 el.addEventListener(eventType, handler);
             });
         } else {
+            if (eventType === 'focus') {
+                return element.addEventListener(eventType, handler, true);
+            }
             element.addEventListener(eventType, handler);
         }
     }
@@ -155,9 +183,15 @@ function removeAllListeners(listeners) {
         //element has length is using querySelectorAll to get elements in listeners
         if (element.length) {
             element.forEach(el => {
+                if (eventType === 'focus') {
+                    return el.removeEventListener(eventType, handler, true);
+                }
                 el.removeEventListener(eventType, handler);
             });
         } else {
+            if (eventType === 'focus') {
+                return element.removeEventListener(eventType, handler, true);
+            }
             element.removeEventListener(eventType, handler);
         }
     });
