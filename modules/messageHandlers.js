@@ -198,9 +198,9 @@ function handleRecordingEvents(message, sender, sendResponse) {
   const length = getQueueLength();
 
   //storing initial element value for every element interaction during recording
-  if (message.value && !getInitialValue(message.targetCssSelector)) {
+  if (message.action === 'focus' && getInitialValue(message.targetCssSelector) === undefined) {
     //in memory storage rather than getting from long term memory every time we do the above check
-    setInitialValue(message.targetCssSelector, message.value);
+    setInitialValue(message.targetCssSelector, message.elementValue);
     pushToQueue(() => storeInitialValue(recordingId, message, next),() => storeEvent(recordingId, message, sendResponse, next));
     if (length === 0) {
       start();

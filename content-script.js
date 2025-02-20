@@ -95,10 +95,10 @@ function activateTestTab() {
                     targetCssSelector, 
                     time
                 };
-                const elementsWithAValue = ['INPUT', 'TEXTAREA', 'SELECT', 'OPTION', 'METER', 'PROGRESS', 'LI'];
-                if (elementsWithAValue.includes(tagName)) {
-                    message.value = target.value;
-                }
+                // const elementsWithAValue = ['INPUT', 'TEXTAREA', 'SELECT', 'OPTION', 'METER', 'PROGRESS', 'LI'];
+                // if (elementsWithAValue.includes(tagName)) {
+                //     message.value = target.value;
+                // }
                 const keydownResponse = await chrome.runtime.sendMessage(message);
                 console.log('keydownResponse:', keydownResponse)
                 console.log(`Keydown! Values stored in background storage => action: ${keydownResponse.action}, stepId: ${keydownResponse.stepId}, tabId: ${keydownResponse.tabId}, tabUrl: ${keydownResponse.tabUrl}, tagName: ${keydownResponse.tagName}, key: ${keydownResponse.key}, code: ${keydownResponse.code}, modifiers: ${keydownResponse.modifiers}, cursorPosition: ${keydownResponse.cursorPosition}, targetCssSelector: ${keydownResponse.targetCssSelector}, interval: ${keydownResponse.interval}`);

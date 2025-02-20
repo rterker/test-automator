@@ -12,11 +12,10 @@ export function storeInitUrl(recordingId, initUrl) {
   });
 }
 
-//TODO: complete this storage
 export function storeInitialValue(recordingId, message, next) {
-  const { targetCssSelector, value } = message;
+  const { targetCssSelector, elementValue } = message;
   const entry = {
-    [targetCssSelector] : value
+    [targetCssSelector] : elementValue
   };
   chrome.storage.session.get(recordingId, function(data) {
     console.log(`storeInitialValue: new entry is ${JSON.stringify(entry, null, 2)}`);
