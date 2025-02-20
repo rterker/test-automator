@@ -43,8 +43,11 @@ export function storeInitialValue(recordingId, message, next) {
 export function storeEvent(recordingId, message, sendResponse, next) {
   const { time } = message;
   const entry = message;
-  const interval = incrementAndGetTime(recordingId, time);
-  entry.interval = interval;
+
+  if (time) {
+    const interval = incrementAndGetTime(recordingId, time);
+    entry.interval = interval;
+  }
 
   chrome.storage.session.get(recordingId, function(data){
     const currentData = data[recordingId];

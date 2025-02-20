@@ -31,6 +31,7 @@ function activateTestTab() {
             handler: async function (event) {
                 let target = event.target;
                 let tagName = target.tagName;
+                const time = Date.now();
                 const elementsWithAValue = ['INPUT', 'TEXTAREA', 'SELECT', 'OPTION', 'METER', 'PROGRESS', 'LI'];
                 if (elementsWithAValue.includes(tagName)) {
                     let targetCssSelector = generateCssSelector(target);
@@ -41,7 +42,7 @@ function activateTestTab() {
                     console.log('focusResponse:', focusResponse)
                     console.log(`Focus! Values stored in background storage => action: ${focusResponse.action}, tabId: ${focusResponse.tabId}, tabUrl: ${focusResponse.tabUrl}, tagName: ${focusResponse.tagName}, targetCssSelector: ${focusResponse.targetCssSelector}, initialValue: ${focusResponse.intialValue}`);
                     let endTime = Date.now();
-                    console.log(`Round trip operation from focus to storage to response received back in content script: ${endTime - focusResponse.time} ms`);
+                    console.log(`Round trip operation from focus to storage to response received back in content script: ${endTime - time} ms`);
                 }
             }
         },
@@ -61,7 +62,7 @@ function activateTestTab() {
                 console.log('mouseClickResponse:', mouseClickResponse)
                 console.log(`Mouse clicked! Values stored in background storage => action: ${mouseClickResponse.action}, stepId: ${mouseClickResponse.stepId}, tabId: ${mouseClickResponse.tabId}, tabUrl: ${mouseClickResponse.tabUrl}, tagName: ${mouseClickResponse.tagName}, x: ${mouseClickResponse.x}, y: ${mouseClickResponse.y}, cursorPosition: ${mouseClickResponse.cursorPosition}, targetCssSelector: ${mouseClickResponse.targetCssSelector}, interval: ${mouseClickResponse.interval}`);
                 let endTime = Date.now();
-                console.log(`Round trip operation from mouse click to storage to response received back in content script: ${endTime - mouseClickResponse.time} ms`);
+                console.log(`Round trip operation from mouse click to storage to response received back in content script: ${endTime - time} ms`);
             }
         },
         {
@@ -69,7 +70,6 @@ function activateTestTab() {
             eventType: 'keydown',
             handler: async function (event) {
                 let target = event.target;
-                console.log('content-script: keydown event target object:', target);
                 let tagName = target.tagName;
                 let time = Date.now();
                 let key = event.key;
@@ -103,7 +103,7 @@ function activateTestTab() {
                 console.log('keydownResponse:', keydownResponse)
                 console.log(`Keydown! Values stored in background storage => action: ${keydownResponse.action}, stepId: ${keydownResponse.stepId}, tabId: ${keydownResponse.tabId}, tabUrl: ${keydownResponse.tabUrl}, tagName: ${keydownResponse.tagName}, key: ${keydownResponse.key}, code: ${keydownResponse.code}, modifiers: ${keydownResponse.modifiers}, cursorPosition: ${keydownResponse.cursorPosition}, targetCssSelector: ${keydownResponse.targetCssSelector}, interval: ${keydownResponse.interval}`);
                 let endTime = Date.now();
-                console.log(`Round trip operation from keydown to storage to response received back in content script: ${endTime - keydownResponse.time} ms`);
+                console.log(`Round trip operation from keydown to storage to response received back in content script: ${endTime - time} ms`);
             }
         },
     ];

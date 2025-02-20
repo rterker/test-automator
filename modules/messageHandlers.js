@@ -29,6 +29,13 @@ import {
   setInitialValue 
 } from "./initialValues.js";
 
+import { 
+  next, 
+  start,
+  pushToQueue,
+  getQueueLength 
+} from "./queue.js";
+
 const path = import.meta.url;
 
 export function handlePopupMessage(message, sender, sendResponse) {
@@ -188,32 +195,18 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
 
 function handleRecordingEvents(message, sender, sendResponse) {
   const recordingId = getRecordingId();
-  const queue = [];
-
-  //when you are done running, call next: next is a method that will dequeue and call the next in line
-  //probably need to pass args to queue[0]()
-  function next() {
-    queue.shift();
-    const nextFunc = queue[0];
-    if (nextFunc) nextFunc();
-  }
-
-  function start() {
-    queue[0]();
-  }
-
-  const length = queue.length;
+  const length = getQueueLength();
 
   //storing initial element value for every element interaction during recording
   if (message.value && !getInitialValue(message.targetCssSelector)) {
     //in memory storage rather than getting from long term memory every time we do the above check
     setInitialValue(message.targetCssSelector, message.value);
-    queue.push(() => storeInitialValue(recordingId, message, next),() => storeEvent(recordingId, message, sendResponse, next));
+    pushToQueue(() => storeInitialValue(recordingId, message, next),() => storeEvent(recordingId, message, sendResponse, next));
     if (length === 0) {
       start();
     }
   } else {
-    queue.push(() => storeEvent(recordingId, message, sendResponse, next));
+    pushToQueue(() => storeEvent(recordingId, message, sendResponse, next));
     if (length === 0) {
       start();
     } 
