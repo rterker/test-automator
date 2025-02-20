@@ -197,20 +197,21 @@ function handleRecordingEvents(message, sender, sendResponse) {
   const recordingId = getRecordingId();
   const length = getQueueLength();
 
-  //storing initial element value for every element interaction during recording
-  if (message.action === 'focus' && getInitialValue(message.targetCssSelector) === undefined) {
-    //in memory storage rather than getting from long term memory every time we do the above check
-    setInitialValue(message.targetCssSelector, message.elementValue);
-    pushToQueue(() => storeInitialValue(recordingId, message, next),() => storeEvent(recordingId, message, sendResponse, next));
-    if (length === 0) {
-      start();
-    }
-  } else {
+  if (message.action !== 'focus') {
     pushToQueue(() => storeEvent(recordingId, message, sendResponse, next));
     if (length === 0) {
       start();
     } 
   }
+  //storing initial element value for every element interaction during recording
+  if (message.action === 'focus' && getInitialValue(message.targetCssSelector) === undefined) {
+    //in memory storage rather than getting from long term memory every time we do the above check
+    setInitialValue(message.targetCssSelector, message.elementValue);
+    pushToQueue(() => storeInitialValue(recordingId, message, next));
+    if (length === 0) {
+      start();
+    }
+  } 
   //handle sendResponse for recording events asynchronously, as the storage api is async
   return true;   
 };
