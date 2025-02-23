@@ -117,24 +117,10 @@ function activateTestTab() {
             removeAllListeners(listeners);
         }
     });
-
-    const signalController = {
-        shouldStop: false,
-        timeoutIds: [],
-        stopPlayback: function() {
-            this.shouldStop = true
-            this.timeoutIds.forEach(id => {
-                console.log('clearing out timeoutId: ', id);
-                clearTimeout(id);
-            });
-            this.timeoutIds = [];
-        }
-    };
     
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log('content-script.js: received message from background');
         
-    
         if (message.action === 'start-recording') {
             addAllListeners(listeners);
             sendResponse({ tabId: message.tabId, tabUrl: window.location.href, message: 'content-script-recording-started', alert: `content-script.js: recording started on tab ${message.tabId}` });
@@ -143,19 +129,17 @@ function activateTestTab() {
             removeAllListeners(listeners);
             sendResponse({ tabId: message.tabId, message: 'content-script-recording-stopped', alert: `content-script.js: recording stopped on tab ${message.tabId}` });
         }
-        if (message.action === 'start-playback') {
-            sendResponse({ tabId: message.tabId, message: 'content-script-playback-started', alert: `content-script.js: playback started on tab ${message.tabId}` });
-            console.log(`content-script.js: playbackObject => ${JSON.stringify(message.playbackObject, null, 2)}`);
-            startPlayback(message.playbackObject, message.tabId, signalController);
-        }
-        if (message.action === 'stop-playback') {
-            signalController.stopPlayback();
-            sendResponse({ tabId: message.tabId, message: 'content-script-playback-stopped', alert: `content-script.js: playback stopped on tab ${message.tabId}` });
-        }
+        // if (message.action === 'start-playback') {
+        //     sendResponse({ tabId: message.tabId, message: 'content-script-playback-started', alert: `content-script.js: playback started on tab ${message.tabId}` });
+        //     console.log(`content-script.js: playbackObject => ${JSON.stringify(message.playbackObject, null, 2)}`);
+        //     startPlayback(message.playbackObject, message.tabId, signalController);
+        // }
+        // if (message.action === 'stop-playback') {
+        //     signalController.stopPlayback();
+        //     sendResponse({ tabId: message.tabId, message: 'content-script-playback-stopped', alert: `content-script.js: playback stopped on tab ${message.tabId}` });
+        // }
     });
 }
-
-
 
 function addAllListeners(listeners) {
     listeners.forEach(({ element, eventType, handler }) => {
@@ -195,58 +179,6 @@ function removeAllListeners(listeners) {
             element.removeEventListener(eventType, handler);
         }
     });
-}
-
-function startPlayback(playbackObject, tabId, signalController) {
-    const playbackSteps = playbackObject.steps;
-    const initUrl = playbackObject.initUrl;
-    chrome.runtime.sendMessage('get-tab-info', (response) => {
-        console.log(`Playback tabUrl: ${response.tabUrl}`);
-        console.log(`Playback tabId: ${response.tabId}`);
-        console.log(`Playback initUrl: ${initUrl}`);
-        if (response.tabUrl === initUrl) {
-            continuePlayback(playbackSteps, tabId, signalController);
-        } else {
-            const action = 'auto-stop-playback';
-            const alertMessage = `Please navigate to starting url before clicking playback.`;
-            chrome.runtime.sendMessage({ action, tabId, alertMessage }, (response) => {
-                console.log('STOP-PLAYBACK AUTO-INVOKED');
-                if (chrome.runtime.lastError) {
-                    console.log(`startPlayback: error occured on stop-playback message from content-script => ${chrome.runtime.lastError}`);
-                } else {
-                    console.log(`startPlayback: ${response.action} occured on tab ${response.tabId}.`);
-                }
-            });
-        }
-    });
-}
-
-function continuePlayback(playbackSteps, tabId, signalController) {
-    let totalInterval = 0;
-    let index = 0;
-    while (!signalController.shouldStop && index < playbackSteps.length) {
-        let timeoutId;
-        const event = playbackSteps[index];
-        const interval = event.interval;
-        totalInterval += interval;
-        if (event.action === 'click') {
-            timeoutId = setTimeout(generateMouseEvent, totalInterval, event);
-        } else if (event.action === 'keydown') {
-            timeoutId = setTimeout(generateTyping, totalInterval, event);
-        }
-        signalController.timeoutIds.push(timeoutId);
-        if (index === playbackSteps.length - 1) {
-            const timeoutId = setTimeout(() => {
-
-                //TODO: error handling
-                const action = 'playback-complete';
-                const alertMessage = `content-script.js: ${action} on tab ${tabId}`;
-                chrome.runtime.sendMessage({ action, tabId, alertMessage });
-            }, totalInterval + 50);
-            signalController.timeoutIds.push(timeoutId);
-        }
-        index++;
-    }
 }
 
 function generateMouseEvent(event) {

@@ -36,9 +36,11 @@ import {
   getQueueLength 
 } from "./queue.js";
 
+import Playback from "./playback.js";
+
 // const path = import.meta.url;
 
-export function handlePopupMessage(message, sender, sendResponse) {
+export async function handlePopupMessage(message, sender, sendResponse) {
   console.log(`handlePopupMessage message is: ${message}`);
   
   const tabId = getTestTabId();
@@ -104,22 +106,14 @@ export function handlePopupMessage(message, sender, sendResponse) {
     console.log('IN MESSAGE HANDLERS START-PLAYBACK');
     const recordingId = getRecordingId();
     getPlaybackObject(recordingId)
-    .then((playbackObject) => {
-      console.log('playbackArray object initially:', playbackObject);
-      //message sent to content-script
-      chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'start-playback', playbackObject }, (response) => {
-        if (response.message === 'content-script-playback-started') {
-          setPlaybackStatus(true);
-        } else {
-          response.message = chrome.runtime.lastError;
-          response.alert = `messageHandlers.js: error message received from content-script when attempting to start-playback`;
-          console.log(`messageHandlers.js: error message received from content-script when attempting to start-playback`);
-        }
-        return sendResponse(response);
-      });
+    .then(playbackObject => Playback.create(playbackObject))
+    .then(playback => {
+      console.log('playback object initially:', playback);
+      //TODO: send response to controls that playback started
+      return sendResponse();
     })
-    .catch((err) => {
-      console.log(`Error when attempting to retrieve playbackObject: ${err}. start-playback message was not sent to content-script.js`);
+    .catch(err => {
+      console.error(`Error when attempting to retrieve playbackObject from storage: ${err}.`);
     });
   }
 
@@ -176,16 +170,6 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
         response = 'recording-disabled';
     }
     return sendResponse(response);
-  }
-
-  if (message.action === 'playback-complete') {
-    setPlaybackStatus(false);
-    return sendResponse();
-  }
-
-  if (message.action === 'auto-stop-playback') {
-    setPlaybackStatus(false);
-    return sendResponse(message);
   }
 
   if (isRecording()) {
