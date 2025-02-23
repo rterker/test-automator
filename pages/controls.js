@@ -1,7 +1,7 @@
-import { logger, ERROR } from "../modules/logger.js";
+// import { logger, ERROR } from "../modules/logger.js";
 
 document.addEventListener('DOMContentLoaded', () => {  
-    const path = import.meta.url;
+    // const path = import.meta.url;
      
     const recordButton = document.getElementById('record');
     const recordingText = document.querySelector('#recording-text');
@@ -54,11 +54,11 @@ document.addEventListener('DOMContentLoaded', () => {
     //TODO: clean up error handling here
     recordButton.addEventListener('click', (event) => {
         chrome.runtime.sendMessage('get-recording-status', (response) => {
-            logger.log(`Response received for get-recording-status message.`, path);
+            console.log(`Response received for get-recording-status message.`);
             const playing = response.isPlaying;
             const recording = response.isRecording;
-            logger.log(`RecordButton listener => playing in tab ${response.tabId}? ${playing}`, path); 
-            logger.log(`RecordButton listener => recording in tab ${response.tabId}? ${recording}`, path); 
+            console.log(`RecordButton listener => playing in tab ${response.tabId}? ${playing}`); 
+            console.log(`RecordButton listener => recording in tab ${response.tabId}? ${recording}`); 
     
             if (playing) {
                 return alert(`Playback in progress. Please end playback before attempting to record.`);
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         recordingText.textContent = 'Record';
                     }
                     if (response.message === 'content-script-recording-started') {
-                        logger.log(`Recording started for tab: ${response.tabId}`, path);
+                        console.log(`Recording started for tab: ${response.tabId}`);
                     }
                     alert(response.alert);
                 });
@@ -83,15 +83,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 chrome.runtime.sendMessage('stop-recording', (response) => {;
                     const error = chrome.runtime.lastError;
                     if (error) {
-                        logger.log(error, path, ERROR);
+                        console.error(error);
                     } 
                     if (response.message === 'content-script-recording-stopped') {
-                        logger.log(`Recording stopped for tab: ${response.tabId}`, path);
+                        console.log(`Recording stopped for tab: ${response.tabId}`);
                     }
                     alert(response.alert);
                 });
             } else {
-                logger.log(`Error occured in recordButton event listener: ${chrome.runtime.lastError}`, path, ERROR);
+                console.error(`Error occured in recordButton event listener: ${chrome.runtime.lastError}`);
             }
         });
     });
@@ -99,11 +99,11 @@ document.addEventListener('DOMContentLoaded', () => {
     //TODO: clean up error handling here
     playbackButton.addEventListener('click', (event) => {
         chrome.runtime.sendMessage('get-playback-status', (response) => {
-            logger.log(`Response received for get-playback-status message.`, path);
+            console.log(`Response received for get-playback-status message.`);
             const playing = response.isPlaying;
             const recording = response.isRecording;
-            logger.log(`playbackbutton listener => playing in tab ${response.tabId}? ${playing}`, path); 
-            logger.log(`playbackbutton listener => recording in tab ${response.tabId}? ${recording}`, path); 
+            console.log(`playbackbutton listener => playing in tab ${response.tabId}? ${playing}`); 
+            console.log(`playbackbutton listener => recording in tab ${response.tabId}? ${recording}`); 
     
             if (recording) {
                 return alert('Recording in progress. Please end recording before attempting to plackback.');
@@ -115,9 +115,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 chrome.runtime.sendMessage('start-playback', (response) => {
                     const error = chrome.runtime.lastError;
                     if (error) {
-                        logger.log(error, path, ERROR);
+                        console.error(error);
                     } else {
-                        logger.log(`Playback started for tab: ${response.tabId}`, path);
+                        console.log(`Playback started for tab: ${response.tabId}`);
                     }
                     alert(response.alert);
                 });
@@ -127,14 +127,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 chrome.runtime.sendMessage('stop-playback', (response) => {
                     const error = chrome.runtime.lastError;
                     if (error) {
-                        logger.log(error, path, ERROR);
+                        console.error(error);
                     } else {
-                        logger.log(`Playback stopped for tab: ${response.tabId}`, path);
+                        console.log(`Playback stopped for tab: ${response.tabId}`);
                     }
                     alert(response.alert);
                 });
             } else {
-                logger.log(`Error occured in playbackButton event listener: ${chrome.runtime.lastError}`, path, ERROR);
+                console.error(`Error occured in playbackButton event listener: ${chrome.runtime.lastError}`);
             }
         });
     });

@@ -19,10 +19,10 @@ import {
   storeEvent
 } from "./storage.js";
 
-import { 
-  logger,
-  ERROR
- } from "./logger.js";
+// import { 
+//   logger,
+//   ERROR
+//  } from "./logger.js";
 
 import { 
   getInitialValue, 
@@ -36,29 +36,29 @@ import {
   getQueueLength 
 } from "./queue.js";
 
-const path = import.meta.url;
+// const path = import.meta.url;
 
 export function handlePopupMessage(message, sender, sendResponse) {
-  logger.log(`handlePopupMessage message is: ${message}`, path);
+  console.log(`handlePopupMessage message is: ${message}`);
   
   const tabId = getTestTabId();
-  logger.log(`popupMessage: test tabId is ${tabId}`, path);
+  console.log(`popupMessage: test tabId is ${tabId}`);
 
   if (message === 'get-recording-status') {
-    logger.log(`popupMessage: get-recording-status message received.`, path);
+    console.log(`popupMessage: get-recording-status message received.`);
     const playing = isPlaying();
     const recording = isRecording();
-    logger.log(`popupMessage: playing status is ${playing}.`, path);
-    logger.log(`popupMessage: recording status is ${recording}.`, path);
+    console.log(`popupMessage: playing status is ${playing}.`);
+    console.log(`popupMessage: recording status is ${recording}.`);
     return sendResponse({ tabId: tabId, isPlaying: playing, isRecording: recording });
   }
 
   if (message === 'get-playback-status') {
-    logger.log(`popupMessage: get-playback-status message received.`, path);
+    console.log(`popupMessage: get-playback-status message received.`);
     const playing = isPlaying();
     const recording = isRecording();
-    logger.log(`popupMessage: playing status is ${playing}.`, path);
-    logger.log(`popupMessage: recording status is ${recording}.`, path);
+    console.log(`popupMessage: playing status is ${playing}.`);
+    console.log(`popupMessage: recording status is ${recording}.`);
     return sendResponse({ tabId: tabId, isPlaying: playing, isRecording: recording });
   }
 
@@ -72,7 +72,7 @@ export function handlePopupMessage(message, sender, sendResponse) {
             message: error.message,
             alert: `Error received from content-script when attempting to start-recording: ${error.message}`
           };
-          logger.log(`messageHandlers.js: error message received from content-script when attempting to start-recording: ${error.message}`, path, ERROR);
+          console.error(`messageHandlers.js: error message received from content-script when attempting to start-recording: ${error.message}`);
           return sendResponse(response);
         }
         if (response.message === 'content-script-recording-started') {
@@ -93,7 +93,7 @@ export function handlePopupMessage(message, sender, sendResponse) {
       if (response.message !== 'content-script-recording-stopped') {
           response.message = chrome.runtime.lastError;
           response.alert = `messageHandlers.js: error message received from content-script when attempting to stop-recording`;
-          logger.log(`messageHandlers.js: error message received from content-script when attempting to stop-recording`, path, ERROR);
+          console.error(`messageHandlers.js: error message received from content-script when attempting to stop-recording`);
       }
       return sendResponse(response);
     });
@@ -113,13 +113,13 @@ export function handlePopupMessage(message, sender, sendResponse) {
         } else {
           response.message = chrome.runtime.lastError;
           response.alert = `messageHandlers.js: error message received from content-script when attempting to start-playback`;
-          logger.log(`messageHandlers.js: error message received from content-script when attempting to start-playback`, path, ERROR);
+          console.log(`messageHandlers.js: error message received from content-script when attempting to start-playback`);
         }
         return sendResponse(response);
       });
     })
     .catch((err) => {
-      logger.log(`Error when attempting to retrieve playbackObject: ${err}. start-playback message was not sent to content-script.js`, path, ERROR);
+      console.log(`Error when attempting to retrieve playbackObject: ${err}. start-playback message was not sent to content-script.js`);
     });
   }
 
@@ -130,7 +130,7 @@ export function handlePopupMessage(message, sender, sendResponse) {
       if (response.message !== 'content-script-playback-stopped') {
         response.message = chrome.runtime.lastError;
         response.alert = `messageHandlers.js: error message received from content-script when attempting to stop-playback`;
-        logger.log(`messageHandlers.js: error message received from content-script when attempting to stop-playback`, path, ERROR);
+        console.log(`messageHandlers.js: error message received from content-script when attempting to stop-playback`);
       }
       return sendResponse(response);
     });
@@ -138,7 +138,7 @@ export function handlePopupMessage(message, sender, sendResponse) {
 }
 
 export function handleContentScriptMessage(message, sender, sendResponse) {
-  logger.log(`handleContentScriptMessage message is: ${message}`, path);
+  console.log(`handleContentScriptMessage message is: ${message}`);
   
   const tabId = sender.tab.id;
   const tabUrl = sender.tab.url;
@@ -147,18 +147,18 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
 
   if (message === 'is-this-a-test-tab') {
     if (!isTestTab) {
-      logger.log(`In handleContentScriptMessage, content-script sender ${tabId} is not the test tab id`, path);
+      console.log(`In handleContentScriptMessage, content-script sender ${tabId} is not the test tab id`);
     }
     return sendResponse(isTestTab);
   }
 
   if (message === 'get-tab-info') {
-    logger.log(`handleContentScriptMessage: tabId is ${tabId} and testTabId is ${testTabId}\n
-      handleContentScriptMessage: are we getting tab info for correct tab? ${isTestTab}`, path);
+    console.log(`handleContentScriptMessage: tabId is ${tabId} and testTabId is ${testTabId}\n
+      handleContentScriptMessage: are we getting tab info for correct tab? ${isTestTab}`);
 
-    logger.log('messageHandlers.js: sending tab info to content script on initialization: ', path);
-    logger.log(`messageHandlers.js: tabId => ${tabId}`, path);
-    logger.log(`messageHandlers.js: tabUrl => ${tabUrl}`, path);
+    console.log('messageHandlers.js: sending tab info to content script on initialization: ');
+    console.log(`messageHandlers.js: tabId => ${tabId}`);
+    console.log(`messageHandlers.js: tabUrl => ${tabUrl}`);
     return sendResponse({ tabId, tabUrl });
   }
   
@@ -166,7 +166,7 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
   //TODO: isRecording returns undefined here when you refresh the page instead of starting a new tab. 
   //this to do may not apply anymore since we are now pulling tab id from the set test tab id
   if (message === 'is-recording-already-enabled') {
-    logger.log(`messageHandlers.js: checking if recording already enabled for tabId: ${tabId}`, path);
+    console.log(`messageHandlers.js: checking if recording already enabled for tabId: ${tabId}`);
     const recording = isRecording();
 
     let response;

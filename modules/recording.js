@@ -2,13 +2,6 @@
 //TODO: increment recordingId later on. just returning 1 each time now for prototype
 //TODO: refactor this whole file later after proof of concept
 
-import { 
-  logger,
-  ERROR
-} from "./logger.js";
-
-const path = import.meta.url;
-
 let recordingId;
 let timer = {};
 

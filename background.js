@@ -1,9 +1,9 @@
 import { initializeTestTab, setTestTabId, setTabFocusStatus } from "./modules/tabStatus.js";
 import { setControlWindowId, getControlWindowId, setControlWindowFocus, getControlWindowFocus } from "./modules/controlWindow.js";
 import { handleContentScriptMessage, handlePopupMessage } from "./modules/messageHandlers.js";
-import { logger, ERROR } from "./modules/logger.js";
+// import { logger, ERROR } from "./modules/logger.js";
 
-const path = import.meta.url;
+// const path = import.meta.url;
 
 //TODO: probably should turn everything off and reset all statuses etc if the control window is closed
 chrome.windows.onRemoved.addListener((windowId) => {
@@ -11,8 +11,8 @@ chrome.windows.onRemoved.addListener((windowId) => {
     if (windowId === controlWindowId) {
         setControlWindowId(undefined);
         setControlWindowFocus(false);
-        logger.log(`Control window id ${windowId} removed`, path);
-        logger.log(`Conrol window focus set to: false}`, path);
+        console.log(`Control window id ${windowId} removed`);
+        console.log(`Conrol window focus set to: false}`);
     }
     return;
 });
@@ -26,28 +26,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'add-control-window-id') {
         const controlWindowId = setControlWindowId(message.windowId);
         setControlWindowFocus(true);
-        logger.log(`Control window id set to: ${controlWindowId}`, path);
-        logger.log(`Control window focus set to: true`, path);
+        console.log(`Control window id set to: ${controlWindowId}`);
+        console.log(`Control window focus set to: true`);
         return sendResponse({});
     }
 
     if (message.action === 'control-window-hidden') {
-        logger.log('Control window is now hidden', path);
+        console.log('Control window is now hidden');
         setControlWindowFocus(false);
         return sendResponse({});
     }
     if (message.action === 'control-window-focus') {
-        logger.log('Control window is now in focus', path);
+        console.log('Control window is now in focus');
         setControlWindowFocus(true);
         return sendResponse({});
     }
     if (message.action === 'test-tab-hidden') {
-        logger.log('Test tab is now hidden', path);
+        console.log('Test tab is now hidden');
         setTabFocusStatus(false);
         return sendResponse({});
     }
     if (message.action === 'test-tab-focus') {
-        logger.log('Test tab is now in focus', path);
+        console.log('Test tab is now in focus');
         setTabFocusStatus(true);
         return sendResponse({});
     }
@@ -56,7 +56,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const tabId = message.tabId;
         setTestTabId(tabId);
         initializeTestTab(tabId);
-        logger.log(`Test tab ${tabId} initialized.`, path)
+        console.log(`Test tab ${tabId} initialized.`);
         return sendResponse({});
     }
      

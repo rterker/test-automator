@@ -1,4 +1,4 @@
-import { logger, ERROR } from "./logger.js";
+// import { console, ERROR } from "./console.js";
 
 const path = import.meta.url;
 
@@ -18,29 +18,29 @@ export function getTestTabId() {
 export function initializeTestTab(tabId) {
     tabRecordingStatus[tabId] = false;
     tabPlaybackStatus[tabId] = false;
-    logger.log(`initializeTestTab: Recording status of ${tabId} is ${tabRecordingStatus[tabId]}`, path);
-    logger.log(`initializeTestTab: Playback status of ${tabId} is ${tabPlaybackStatus[tabId]}`, path);
+    console.log(`initializeTestTab: Recording status of ${tabId} is ${tabRecordingStatus[tabId]}`);
+    console.log(`initializeTestTab: Playback status of ${tabId} is ${tabPlaybackStatus[tabId]}`);
 }
 
 
 export function isPlaying() {
-    logger.log(`isPlaying: Playback status of ${testTabId} is ${tabPlaybackStatus[testTabId]}`, path);
+    console.log(`isPlaying: Playback status of ${testTabId} is ${tabPlaybackStatus[testTabId]}`);
     return tabPlaybackStatus[testTabId];
 }
 
 export function isRecording() {
-    logger.log(`isRecording: Recording status of ${testTabId} is ${tabRecordingStatus[testTabId]}`, path);
+    console.log(`isRecording: Recording status of ${testTabId} is ${tabRecordingStatus[testTabId]}`);
     return tabRecordingStatus[testTabId];
 }
 
 export function setRecordingStatus(status) {
     tabRecordingStatus[testTabId] = status;
-    logger.log(`setRecordingStatus: Recording status of ${testTabId} set to ${status}`, path);
+    console.log(`setRecordingStatus: Recording status of ${testTabId} set to ${status}`);
 }
 
 export function setPlaybackStatus(status) {
     tabPlaybackStatus[testTabId] = status;
-    logger.log(`setPlaybackStatus: Playback status of ${testTabId} set to ${status}`, path);
+    console.log(`setPlaybackStatus: Playback status of ${testTabId} set to ${status}`);
 }
 
 export function setTabFocusStatus(status) {
