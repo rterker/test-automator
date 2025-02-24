@@ -255,11 +255,11 @@ function generateTyping(event) {
     
     // Dispatch the events for any event listeners on the page
     element.dispatchEvent(keydownEvent); 
+    element.dispatchEvent(keyupEvent);
     
     dispatch[type]();
 
     element.dispatchEvent(inputEvent);  
-    element.dispatchEvent(keyupEvent);
 }
 
 
