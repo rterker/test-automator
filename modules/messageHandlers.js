@@ -78,6 +78,7 @@ export async function handlePopupMessage(message, sender, sendResponse) {
           return sendResponse(response);
         }
         if (response.message === 'content-script-recording-started') {
+            //TODO: need to set real recording ids
             const recordingId = setRecordingId('test');
             setRecordingStatus(true);
             initializeRecordingTimer();
@@ -103,20 +104,28 @@ export async function handlePopupMessage(message, sender, sendResponse) {
 
   if (message === 'start-playback') {
     //TODO: actually pass in a real recording id here, not just test. this should come from input in controls
-    console.log('IN MESSAGE HANDLERS START-PLAYBACK');
     const recordingId = getRecordingId();
-    getPlaybackObject(recordingId)
+    return getPlaybackObject(recordingId)
     .then(playbackObject => Playback.create(playbackObject))
     .then(playback => {
-      console.log('playback object initially:', playback);
-      //TODO: send response to controls that playback started
-      return sendResponse();
+      console.log('messageHandlers.js: start-playback playback object initially:', playback);
+      const tabId = playback.tabId;
+      playback.startPlayback();
+      return sendResponse({
+        alert: `Playback started on tab ${tabId}`,
+        tabId
+      });
     })
     .catch(err => {
-      console.error(`Error when attempting to retrieve playbackObject from storage: ${err}.`);
+      console.error(`messageHandlers.js: error when attempting to start playback: ${err}.`);
+      return sendResponse({
+        error: true,
+        alert: `Error occured when attempting to start playback: ${err}.`
+      });
     });
   }
 
+  //TODO: REFACTOR
   if (message === 'stop-playback') {
     // stop the current playback using some sort of id
     chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'stop-playback' }, (response) => {

@@ -96,7 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    //TODO: clean up error handling here
     playbackButton.addEventListener('click', (event) => {
         chrome.runtime.sendMessage('get-playback-status', (response) => {
             console.log(`Response received for get-playback-status message.`);
@@ -113,15 +112,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 playbackButton.classList.add('playing');
                 playbackText.textContent = 'Playing...';
                 chrome.runtime.sendMessage('start-playback', (response) => {
-                    const error = chrome.runtime.lastError;
-                    if (error) {
-                        console.error(error);
+                    if (response.error) {
+                        playbackButton.classList.remove('playing');
+                        playbackText.textContent = 'Playback';
+                        console.error(response.error);
                     } else {
                         console.log(`Playback started for tab: ${response.tabId}`);
                     }
                     alert(response.alert);
                 });
             } else if (playing) {
+                //TODO: REFACTOR
                 playbackButton.classList.remove('playing');
                 playbackText.textContent = 'Playback';
                 chrome.runtime.sendMessage('stop-playback', (response) => {

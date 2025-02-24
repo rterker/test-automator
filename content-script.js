@@ -129,15 +129,11 @@ function activateTestTab() {
             removeAllListeners(listeners);
             sendResponse({ tabId: message.tabId, message: 'content-script-recording-stopped', alert: `content-script.js: recording stopped on tab ${message.tabId}` });
         }
-        // if (message.action === 'start-playback') {
-        //     sendResponse({ tabId: message.tabId, message: 'content-script-playback-started', alert: `content-script.js: playback started on tab ${message.tabId}` });
-        //     console.log(`content-script.js: playbackObject => ${JSON.stringify(message.playbackObject, null, 2)}`);
-        //     startPlayback(message.playbackObject, message.tabId, signalController);
-        // }
-        // if (message.action === 'stop-playback') {
-        //     signalController.stopPlayback();
-        //     sendResponse({ tabId: message.tabId, message: 'content-script-playback-stopped', alert: `content-script.js: playback stopped on tab ${message.tabId}` });
-        // }
+        if (message.type === 'playback-event') {
+            playbackEvent(message.event);
+            //TODO: send a response?
+            sendResponse();
+        }
     });
 }
 
@@ -181,12 +177,26 @@ function removeAllListeners(listeners) {
     });
 }
 
+function playbackEvent(event) {
+    switch(event.action) {
+        case 'click':
+            generateMouseEvent(event);
+            break;
+        case 'keydown': 
+            generateTyping(event);
+            break;
+        default:
+            break;
+    }
+}
+
 function generateMouseEvent(event) {
     const { action, interval, x, y, tabUrl, tabId, targetCssSelector } = event;
     if (action === 'click') {
         clickMouseLeft(x, y, targetCssSelector);
     }
 }
+
 
 function clickMouseLeft(x, y, cssSelector) {
     const clickEvent = new MouseEvent('click', {
