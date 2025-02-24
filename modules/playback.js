@@ -1,6 +1,13 @@
 import { setPlaybackStatus } from "./tabStatus.js";
 import { getTestTabId } from "./tabStatus.js";
 
+const playing = {};
+
+export function stopPlayback(recordingId) {
+  const playback = playing[recordingId];
+  playback.stopPlayback();
+  delete playing[recordingId];
+}
 
 class SignalController {
   constructor() {
@@ -19,16 +26,17 @@ class SignalController {
 }
 
 class Playback {
-  constructor(playbackObject) {
-    this.signalController = new SignalController();
+  constructor(recordingId, playbackObject) {
+    this.recordingId = recordingId;
     this.playbackObject = playbackObject;
+    this.signalController = new SignalController();
     this.steps = this.playbackObject.steps;
     this.tabId = getTestTabId();
     this.tabUrl = null;
   }
 
-  static async create(playbackObject) {
-    const instance = new Playback(playbackObject);
+  static async create(recordingId, playbackObject) {
+    const instance = new Playback(recordingId, playbackObject);
     instance.tabUrl = await instance.getTabUrl();
     return instance;
   }
@@ -41,6 +49,10 @@ class Playback {
         return res(tab.url);
       });
     });
+  }
+
+  pushToPlaying() {
+    playing[this.recordingId] = this;
   }
 
   startPlayback() {
@@ -60,6 +72,7 @@ class Playback {
   }
 
   continuePlayback() {
+    this.pushToPlaying();
     let totalInterval = 0;
     let index = 0;
     while (!this.signalController.shouldStop && index < this.steps.length) {
@@ -87,12 +100,13 @@ class Playback {
       event
     };
     chrome.tabs.sendMessage(event.tabId, wrappedEvent, (response) => {
-      //TODO: get a response and do something with it
+      console.log(`Event played: ${response.event}`);
     });
   }
 
   stopPlayback() {
-    return this.signalController.stopPlayback();
+    this.signalController.stopPlayback();
+    setPlaybackStatus(false);
   }
 }
 
@@ -101,8 +115,6 @@ export default Playback;
 
 
 
-
-//dispatch each playback step to content-script
 //dispatch error messages to control window
 
 

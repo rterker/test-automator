@@ -118,21 +118,18 @@ function activateTestTab() {
         }
     });
     
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        console.log('content-script.js: received message from background');
-        
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {      
         if (message.action === 'start-recording') {
             addAllListeners(listeners);
-            sendResponse({ tabId: message.tabId, tabUrl: window.location.href, message: 'content-script-recording-started', alert: `content-script.js: recording started on tab ${message.tabId}` });
+            sendResponse({ tabId: message.tabId, tabUrl: window.location.href, message: 'content-script-recording-started', alert: `Recording started on tab ${message.tabId}` });
         }
         if (message.action === 'stop-recording') {
             removeAllListeners(listeners);
-            sendResponse({ tabId: message.tabId, message: 'content-script-recording-stopped', alert: `content-script.js: recording stopped on tab ${message.tabId}` });
+            sendResponse({ tabId: message.tabId, message: 'content-script-recording-stopped', alert: `Recording stopped on tab ${message.tabId}` });
         }
         if (message.type === 'playback-event') {
             playbackEvent(message.event);
-            //TODO: send a response?
-            sendResponse();
+            sendResponse({ event: message.event });
         }
     });
 }

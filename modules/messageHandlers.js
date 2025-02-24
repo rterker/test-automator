@@ -36,8 +36,8 @@ import {
   getQueueLength 
 } from "./queue.js";
 
-import Playback from "./playback.js";
-
+import Playback, { stopPlayback } from "./playback.js";
+ 
 // const path = import.meta.url;
 
 export async function handlePopupMessage(message, sender, sendResponse) {
@@ -106,7 +106,7 @@ export async function handlePopupMessage(message, sender, sendResponse) {
     //TODO: actually pass in a real recording id here, not just test. this should come from input in controls
     const recordingId = getRecordingId();
     return getPlaybackObject(recordingId)
-    .then(playbackObject => Playback.create(playbackObject))
+    .then(playbackObject => Playback.create(recordingId, playbackObject))
     .then(playback => {
       console.log('messageHandlers.js: start-playback playback object initially:', playback);
       const tabId = playback.tabId;
@@ -128,14 +128,11 @@ export async function handlePopupMessage(message, sender, sendResponse) {
   //TODO: REFACTOR
   if (message === 'stop-playback') {
     // stop the current playback using some sort of id
-    chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'stop-playback' }, (response) => {
-      setPlaybackStatus(false);
-      if (response.message !== 'content-script-playback-stopped') {
-        response.message = chrome.runtime.lastError;
-        response.alert = `messageHandlers.js: error message received from content-script when attempting to stop-playback`;
-        console.log(`messageHandlers.js: error message received from content-script when attempting to stop-playback`);
-      }
-      return sendResponse(response);
+    //TODO: actually pass in a real recording id here, not just test. this should come from input in controls
+    const recordingId = getRecordingId();
+    stopPlayback(recordingId);
+    return sendResponse({
+      alert: `Playback for ${recordingId} has been stopped.`
     });
   }
 }

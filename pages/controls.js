@@ -122,7 +122,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert(response.alert);
                 });
             } else if (playing) {
-                //TODO: REFACTOR
                 playbackButton.classList.remove('playing');
                 playbackText.textContent = 'Playback';
                 chrome.runtime.sendMessage('stop-playback', (response) => {
