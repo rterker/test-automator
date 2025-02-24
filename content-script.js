@@ -237,7 +237,7 @@ function generateTyping(event) {
         type = key;
     }
 
-    const inputEvent = new InputEvent('input');
+    const inputEvent = new InputEvent('input', { bubbles: true, cancelable: true, composed: true });
     const keydownEvent = new KeyboardEvent("keydown", options);
     const keyupEvent = new KeyboardEvent("keyup", options);
 
