@@ -32,18 +32,18 @@ function activateTestTab() {
                 let target = event.target;
                 let tagName = target.tagName;
                 const time = Date.now();
-                const elementsWithAValue = ['INPUT', 'TEXTAREA', 'SELECT', 'OPTION', 'METER', 'PROGRESS', 'LI'];
-                if (elementsWithAValue.includes(tagName)) {
-                    let targetCssSelector = generateCssSelector(target);
-                    //TODO: do we need to identify the tab and url to make sure we are identifying the element on the right page?
-                    const tabInfoResponse = await chrome.runtime.sendMessage('get-tab-info');
-                    const elementValue = target.value;
-                    const focusResponse = await chrome.runtime.sendMessage({ action: 'focus', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, tagName, targetCssSelector, elementValue });
-                    console.log('focusResponse:', focusResponse)
-                    console.log(`Focus! Values stored in background storage => action: ${focusResponse.action}, tabId: ${focusResponse.tabId}, tabUrl: ${focusResponse.tabUrl}, tagName: ${focusResponse.tagName}, targetCssSelector: ${focusResponse.targetCssSelector}, initialValue: ${focusResponse.intialValue}`);
-                    let endTime = Date.now();
-                    console.log(`Round trip operation from focus to storage to response received back in content script: ${endTime - time} ms`);
-                }
+                // const elementsWithAValue = ['INPUT', 'TEXTAREA', 'SELECT', 'OPTION', 'METER', 'PROGRESS', 'LI'];
+                // if (elementsWithAValue.includes(tagName)) {
+                let targetCssSelector = generateCssSelector(target);
+                //TODO: do we need to identify the tab and url to make sure we are identifying the element on the right page?
+                const tabInfoResponse = await chrome.runtime.sendMessage('get-tab-info');
+                const elementValue = target.value;
+                const focusResponse = await chrome.runtime.sendMessage({ action: 'focus', tabId: tabInfoResponse.tabId, tabUrl: tabInfoResponse.tabUrl, tagName, targetCssSelector, elementValue, time });
+                console.log('focusResponse:', focusResponse)
+                console.log(`Focus! Values stored in background storage => action: ${focusResponse.action}, tabId: ${focusResponse.tabId}, tabUrl: ${focusResponse.tabUrl}, tagName: ${focusResponse.tagName}, targetCssSelector: ${focusResponse.targetCssSelector}, initialValue: ${focusResponse.intialValue}, interval: ${focusResponse.interval}`);
+                let endTime = Date.now();
+                console.log(`Round trip operation from focus to storage to response received back in content script: ${endTime - time} ms`);
+                // }
             }
         },
         {
@@ -182,9 +182,18 @@ function playbackEvent(event) {
         case 'keydown': 
             generateTyping(event);
             break;
+        case 'focus':
+            focusOnElement(event);
+            break;
         default:
             break;
     }
+}
+
+function focusOnElement(event) {
+    const { action, interval, tabId, tabUrl, tagName, targetCssSelector, initialValue } = event;
+    const element = document.querySelector(targetCssSelector);
+    element.focus();
 }
 
 function generateMouseEvent(event) {

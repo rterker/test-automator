@@ -83,6 +83,7 @@ class Playback {
       this.signalController.timeoutIds.push(timeoutId);
       if (index === this.steps.length - 1) {
         const timeoutId = setTimeout(() => {
+          //TODO: stop playback here to remove from playing object
           setPlaybackStatus(false);
           const action = 'playback-complete';
           const alertMessage = `${action} on tab ${this.tabId}`;
@@ -99,7 +100,9 @@ class Playback {
       type: 'playback-event',
       event
     };
+    console.log('wrappedEvent: ', wrappedEvent);
     chrome.tabs.sendMessage(event.tabId, wrappedEvent, (response) => {
+      console.log('response: ', response);
       console.log(`Event played: ${response.event}`);
     });
   }
