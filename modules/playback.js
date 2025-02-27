@@ -71,41 +71,68 @@ class Playback {
     }
   }
 
-  continuePlayback() {
+  async continuePlayback() {
     this.pushToPlaying();
     let totalInterval = 0;
     let index = 0;
     while (!this.signalController.shouldStop && index < this.steps.length) {
       const event = this.steps[index];
+      const { boundingBox, error } = await this.getBoundingBox(event);
+      if (error) console.error('Error occured in playback: ', error);
       const interval = event.interval;
       totalInterval += interval;
-      const timeoutId = setTimeout(this.sendEvent, totalInterval, event);
-      this.signalController.timeoutIds.push(timeoutId);
-      if (index === this.steps.length - 1) {
-        const timeoutId = setTimeout(() => {
-          //TODO: stop playback here to remove from playing object
-          setPlaybackStatus(false);
-          const action = 'playback-complete';
-          const alertMessage = `${action} on tab ${this.tabId}`;
-          chrome.runtime.sendMessage({ action, tabId: this.tabId, alertMessage });
-        }, totalInterval + 50);
-        this.signalController.timeoutIds.push(timeoutId);
-      }
-      index++;
+      //TODO: complete this and everything below in this function
+      this.simulateEventWithTimeout(boundingBox, totalInterval, event);
+      // const timeoutId = setTimeout(this.sendEvent, totalInterval, event);
+      // this.signalController.timeoutIds.push(timeoutId);
+      // if (index === this.steps.length - 1) {
+      //   const timeoutId = setTimeout(() => {
+      //     //TODO: stop playback here to remove from playing object
+      //     setPlaybackStatus(false);
+      //     const action = 'playback-complete';
+      //     const alertMessage = `${action} on tab ${this.tabId}`;
+      //     chrome.runtime.sendMessage({ action, tabId: this.tabId, alertMessage });
+      //   }, totalInterval + 50);
+      //   this.signalController.timeoutIds.push(timeoutId);
+      // }
+      // index++;
     }
   }
 
-  sendEvent(event) {
-    const wrappedEvent = {
-      type: 'playback-event',
+  //TODO: need to handle async here so we get the bounding box and only after that we continue
+  async getBoundingBox(event) {
+    const message = {
+      action: 'get-bounding-box', 
       event
     };
-    console.log('wrappedEvent: ', wrappedEvent);
-    chrome.tabs.sendMessage(event.tabId, wrappedEvent, (response) => {
-      console.log('response: ', response);
-      console.log(`Event played: ${response.event}`);
+    return new Promise((resolve, reject) => {
+      chrome.tabs.sendMessage(event.tabId, message, (response) => {
+        const error = chrome.runtime.lastError;
+        if (error) return reject({ error });
+        const boundingBox = response.boundingBox;
+        console.log('bounding box in playback is: ', boundingBox);
+        return resolve({ boundingBox });
+      });
     });
   }
+
+  //TODO: finish this, don't think we need async here
+  simulateEventWithTimeout(boundingBox, totalInterval, event) {
+    const timeoutId = setTimeout(this.generateEvent, totalInterval, event);
+    return timeoutId;
+  }
+
+  // sendEvent(event) {
+  //   const wrappedEvent = {
+  //     type: 'playback-event',
+  //     event
+  //   };
+  //   console.log('wrappedEvent: ', wrappedEvent);
+  //   chrome.tabs.sendMessage(event.tabId, wrappedEvent, (response) => {
+  //     console.log('response: ', response);
+  //     console.log(`Event played: ${response.event}`);
+  //   });
+  // }
 
   stopPlayback() {
     this.signalController.stopPlayback();
