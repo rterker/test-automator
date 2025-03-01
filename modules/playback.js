@@ -3,10 +3,9 @@ import { getTestTabId } from "./tabStatus.js";
 
 const playing = {};
 
-export function stopPlayback(recordingId) {
+export async function stopPlayback(recordingId) {
   const playback = playing[recordingId];
-  playback.stopPlayback();
-  delete playing[recordingId];
+  await playback.stopPlayback();
 }
 
 class SignalController {
@@ -73,6 +72,12 @@ class Playback {
 
   async continuePlayback() {
     this.pushToPlaying();
+    await chrome.debugger.attach(
+      {
+        tabId: this.tabId
+      },
+      "1.3"
+    );
     let totalInterval = 0;
     let index = 0;
     while (!this.signalController.shouldStop && index < this.steps.length) {
@@ -81,21 +86,21 @@ class Playback {
       if (error) console.error('Error occured in playback: ', error);
       const interval = event.interval;
       totalInterval += interval;
-      //TODO: complete this and everything below in this function
-      this.simulateEventWithTimeout(boundingBox, totalInterval, event);
-      // const timeoutId = setTimeout(this.sendEvent, totalInterval, event);
-      // this.signalController.timeoutIds.push(timeoutId);
-      // if (index === this.steps.length - 1) {
-      //   const timeoutId = setTimeout(() => {
-      //     //TODO: stop playback here to remove from playing object
-      //     setPlaybackStatus(false);
-      //     const action = 'playback-complete';
-      //     const alertMessage = `${action} on tab ${this.tabId}`;
-      //     chrome.runtime.sendMessage({ action, tabId: this.tabId, alertMessage });
-      //   }, totalInterval + 50);
-      //   this.signalController.timeoutIds.push(timeoutId);
-      // }
-      // index++;
+      //TODO: refactor to control event generator using the event.action from the stored event. just doing click events now every time
+      const eventGenerator = new GenerateEvent(ClickEvent, boundingBox);
+      const timeoutId = setTimeout(eventGenerator.dispatch, totalInterval, this.tabId);
+      this.signalController.timeoutIds.push(timeoutId);
+      if (index === this.steps.length - 1) {
+        const timeoutId = setTimeout(() => {
+          //TODO: stop playback here to remove from playing object
+          setPlaybackStatus(false);
+          const action = 'playback-complete';
+          const alertMessage = `${action} on tab ${this.tabId}`;
+          chrome.runtime.sendMessage({ action, tabId: this.tabId, alertMessage });
+        }, totalInterval + 50);
+        this.signalController.timeoutIds.push(timeoutId);
+      }
+      index++;
     }
   }
 
@@ -116,12 +121,6 @@ class Playback {
     });
   }
 
-  //TODO: finish this, don't think we need async here
-  simulateEventWithTimeout(boundingBox, totalInterval, event) {
-    const timeoutId = setTimeout(this.generateEvent, totalInterval, event);
-    return timeoutId;
-  }
-
   // sendEvent(event) {
   //   const wrappedEvent = {
   //     type: 'playback-event',
@@ -134,10 +133,78 @@ class Playback {
   //   });
   // }
 
-  stopPlayback() {
+  async stopPlayback() {
+    console.log('in playback stopPlayback, before stop, playing queue is: ', playing);
     this.signalController.stopPlayback();
     setPlaybackStatus(false);
+    //remove this playback object from playing queue
+    delete playing[this.recordingId];
+    console.log('in playback stopPlayback, after stop, playing queue is: ', playing);
+    await chrome.debugger.detatch({ tabId: this.tabId });
   }
+}
+
+class GenerateEvent {
+  constructor(type, boundingBox) {
+    this.type = type;
+    this.boundingBox = boundingBox;
+    this.x = this.boundingBox.x + (this.boundingBox.width / 2);
+    this.y = this.boundingBox.y + (this.boundingBox.height / 2);
+  }
+  async dispatch(tabId) {
+    const event = new this.type(this.x, this.y);
+    return await this.event.dispatch(tabId);
+  }
+}
+
+class ClickEvent {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+  async dispatch(tabId) {
+    const x = this.x;
+    const y = this.y;
+
+    await chrome.debugger.sendCommand(
+      {
+        tabId
+      },
+      "Input.dispatchMouseEvent",
+      {
+        type: "mousePressed",
+        x,
+        y,
+        button: "left",
+        clickCount: 1
+      }
+    );
+    await chrome.debugger.sendCommand(
+      {
+        tabId
+      },
+      "Input.dispatchMouseEvent",
+      {
+        type: "mouseReleased",
+        x,
+        y,
+        button: "left",
+        clickCount: 1
+      }
+    );
+  }
+}
+
+//TODO: COMPLETE THIS
+class KeyboardEvent {
+ constructor (x, y) {
+  this.x = x;
+  this.y = y;
+ }
+ async dispatch(tabId) {
+  await chrome.debugger.sendCommand();
+  await chrome.debugger.sendCommand();
+ }
 }
 
 export default Playback;

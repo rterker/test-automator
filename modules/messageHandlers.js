@@ -130,7 +130,7 @@ export async function handlePopupMessage(message, sender, sendResponse) {
     // stop the current playback using some sort of id
     //TODO: actually pass in a real recording id here, not just test. this should come from input in controls
     const recordingId = getRecordingId();
-    stopPlayback(recordingId);
+    await stopPlayback(recordingId);
     return sendResponse({
       alert: `Playback for ${recordingId} has been stopped.`
     });
