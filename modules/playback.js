@@ -1,4 +1,4 @@
-import { setPlaybackStatus } from "./tabStatus.js";
+import { isPlaying, setPlaybackStatus } from "./tabStatus.js";
 import { getTestTabId } from "./tabStatus.js";
 
 const playing = {};
@@ -8,30 +8,15 @@ export async function stopPlayback(recordingId) {
   await playback.stopPlayback();
 }
 
-class SignalController {
-  constructor() {
-    this.shouldStop = false;
-    this.timeoutIds = [];
-  }
-
-  stopPlayback() {
-    this.shouldStop = true
-    this.timeoutIds.forEach(id => {
-        console.log('clearing out timeoutId: ', id);
-        clearTimeout(id);
-    });
-    this.timeoutIds = [];
-  }
-}
-
+//TODO: eventually bring playback status in here rather than having it in a separate module
 class Playback {
   constructor(recordingId, playbackObject) {
     this.recordingId = recordingId;
     this.playbackObject = playbackObject;
-    this.signalController = new SignalController();
     this.steps = this.playbackObject.steps;
     this.tabId = getTestTabId();
     this.tabUrl = null;
+    this.timeoutIds = [];
   }
 
   static async create(recordingId, playbackObject) {
@@ -80,31 +65,31 @@ class Playback {
     );
     let totalInterval = 0;
     let index = 0;
-    while (!this.signalController.shouldStop && index < this.steps.length) {
+    while (isPlaying() && index < this.steps.length) {
       const event = this.steps[index];
       const { boundingBox, error } = await this.getBoundingBox(event);
-      if (error) console.error('Error occured in playback: ', error);
+      if (error) console.error('Error occured in playback when getting bounding box: ', error);
       const interval = event.interval;
       totalInterval += interval;
       //TODO: refactor to control event generator using the event.action from the stored event. just doing click events now every time
       const eventGenerator = new GenerateEvent(ClickEvent, boundingBox);
-      const timeoutId = setTimeout(eventGenerator.dispatch, totalInterval, this.tabId);
-      this.signalController.timeoutIds.push(timeoutId);
+      const boundDipatch = eventGenerator.dispatch.bind(eventGenerator);
+      const timeoutId = setTimeout(boundDipatch, totalInterval, this.tabId);
+      this.timeoutIds.push(timeoutId);
+      //TODO: may need to check if playing in this last setTimeout to determine if this needs to happen
       if (index === this.steps.length - 1) {
         const timeoutId = setTimeout(() => {
-          //TODO: stop playback here to remove from playing object
-          setPlaybackStatus(false);
+          this.stopPlayback.bind(this)();
           const action = 'playback-complete';
           const alertMessage = `${action} on tab ${this.tabId}`;
           chrome.runtime.sendMessage({ action, tabId: this.tabId, alertMessage });
         }, totalInterval + 50);
-        this.signalController.timeoutIds.push(timeoutId);
+        this.timeoutIds.push(timeoutId);
       }
       index++;
     }
   }
 
-  //TODO: need to handle async here so we get the bounding box and only after that we continue
   async getBoundingBox(event) {
     const message = {
       action: 'get-bounding-box', 
@@ -121,26 +106,14 @@ class Playback {
     });
   }
 
-  // sendEvent(event) {
-  //   const wrappedEvent = {
-  //     type: 'playback-event',
-  //     event
-  //   };
-  //   console.log('wrappedEvent: ', wrappedEvent);
-  //   chrome.tabs.sendMessage(event.tabId, wrappedEvent, (response) => {
-  //     console.log('response: ', response);
-  //     console.log(`Event played: ${response.event}`);
-  //   });
-  // }
-
   async stopPlayback() {
-    console.log('in playback stopPlayback, before stop, playing queue is: ', playing);
-    this.signalController.stopPlayback();
+    this.timeoutIds.forEach(id => {
+      clearTimeout(id);
+    });
+    this.timeoutIds = [];
     setPlaybackStatus(false);
-    //remove this playback object from playing queue
     delete playing[this.recordingId];
-    console.log('in playback stopPlayback, after stop, playing queue is: ', playing);
-    await chrome.debugger.detatch({ tabId: this.tabId });
+    await chrome.debugger.detach({ tabId: this.tabId });
   }
 }
 
@@ -148,12 +121,13 @@ class GenerateEvent {
   constructor(type, boundingBox) {
     this.type = type;
     this.boundingBox = boundingBox;
+    //TODO: seems to be an issue dispatching on certain elements. may be the coords, not sure yet
     this.x = this.boundingBox.x + (this.boundingBox.width / 2);
     this.y = this.boundingBox.y + (this.boundingBox.height / 2);
   }
   async dispatch(tabId) {
     const event = new this.type(this.x, this.y);
-    return await this.event.dispatch(tabId);
+    return await event.dispatch(tabId);
   }
 }
 

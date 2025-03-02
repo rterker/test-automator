@@ -50,4 +50,3 @@ export function setTabFocusStatus(status) {
 export function getTabFocusStatus() {
     return tabHasFocus;
 }
-

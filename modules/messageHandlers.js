@@ -132,6 +132,7 @@ export async function handlePopupMessage(message, sender, sendResponse) {
     const recordingId = getRecordingId();
     await stopPlayback(recordingId);
     return sendResponse({
+      tabId,
       alert: `Playback for ${recordingId} has been stopped.`
     });
   }
