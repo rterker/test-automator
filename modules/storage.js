@@ -4,11 +4,15 @@ import {
 
 //No need to get storage object for recordingId b/c this is the initial storage for each recordingId, so nothing is being overwritten
 export function storeInitUrl(recordingId, initUrl) {
-  chrome.storage.session.set({ [recordingId]: { initUrl } }, function(err) {
-    console.log(`storeInitUrl: recordingId ${recordingId} initUrl after update ${JSON.stringify({ [recordingId]: { initUrl } }, null, 2)}`);
-    if (err) {
-      console.error(`Error occured in storeInitUrl: ${err}`);
-    }
+  return new Promise((resolve, reject) => {
+    chrome.storage.session.set({ [recordingId]: { initUrl } }, function(err) {
+      console.log(`storeInitUrl: recordingId ${recordingId} initUrl after update ${JSON.stringify({ [recordingId]: { initUrl } }, null, 2)}`);
+      if (err) {
+        console.error(`Error occured in storeInitUrl: ${err.message}`);
+        return reject({ status: 'fail', error: err });
+      }
+      return resolve({ status: 'success' });
+    });
   });
 }
 

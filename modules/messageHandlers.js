@@ -69,8 +69,19 @@ export async function handlePopupMessage(message, sender, sendResponse) {
         setRecordingStatus(true);
         initializeRecordingTimer();
         //TODO: should we handle storing initial URL solely in storage? what happens if you stop recording then start again for same recording?
-        storeInitUrl(recordingId, response.tabUrl);
-        return sendResponse(messageResponse);
+        storeInitUrl(recordingId, messageResponse.tabUrl)
+        .then(status => {
+          if (status === 'success') return sendResponse(messageResponse);
+        })
+        .catch(err => {
+          const response = {
+            error: true,
+            message: err.message,
+            alert: `Error received from content-script when attempting to start-recording: ${err.message}`
+          };
+          console.error(`messageHandlers.js: error message received from content-script when attempting to start-recording: ${err.message}`);
+          return sendResponse(response);
+        });
       } 
     });
   }

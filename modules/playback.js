@@ -50,7 +50,7 @@ class Playback {
     } else {
       setPlaybackStatus(false);
       const action = 'auto-stop-playback';
-      const alertMessage = `Please navigate to starting url before clicking playback.`;
+      const alertMessage = `Please navigate to starting url [${initUrl}] before clicking playback.`;
       chrome.runtime.sendMessage({ action, tabId: this.tabId, alertMessage });
     }
   }
@@ -68,6 +68,7 @@ class Playback {
     while (isPlaying() && index < this.steps.length) {
       const event = this.steps[index];
       const { boundingBox, error } = await this.getBoundingBox(event);
+      console.log(`result from getBoundingBox: ${boundingBox}`);
       if (error) console.error('Error occured in playback when getting bounding box: ', error);
       const interval = event.interval;
       totalInterval += interval;
@@ -100,7 +101,6 @@ class Playback {
         const error = chrome.runtime.lastError;
         if (error) return reject({ error });
         const boundingBox = response.boundingBox;
-        console.log('bounding box in playback is: ', boundingBox);
         return resolve({ boundingBox });
       });
     });
@@ -121,7 +121,7 @@ class GenerateEvent {
   constructor(type, boundingBox) {
     this.type = type;
     this.boundingBox = boundingBox;
-    //TODO: seems to be an issue dispatching on certain elements. may be the coords, not sure yet
+    //TODO: seems to be an issue dispatching on certain elements. i think it may have to do with a wait
     this.x = this.boundingBox.x + (this.boundingBox.width / 2);
     this.y = this.boundingBox.y + (this.boundingBox.height / 2);
   }
