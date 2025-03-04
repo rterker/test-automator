@@ -16,3 +16,4 @@ Task list:
 - [ ] stop playback when errors occur and the playback is invalid
 - [ ] handle event 'misses' where, e.g., i click on something, but it doesn't click on the right thing during playback
 - [ ] change the debugger message when the automator is running
+- [ ] implement some sort of wait until element appears before acting on it
