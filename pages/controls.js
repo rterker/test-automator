@@ -71,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (response.error) {
                         recordButton.classList.remove('recording');
                         recordingText.textContent = 'Record';
+                        console.error(response.message);
                     }
                     if (response.message === 'content-script-recording-started') {
                         console.log(`Recording started for tab: ${response.tabId}`);
@@ -81,9 +82,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 recordButton.classList.remove('recording');
                 recordingText.textContent = 'Record';
                 chrome.runtime.sendMessage('stop-recording', (response) => {;
-                    const error = chrome.runtime.lastError;
-                    if (error) {
-                        console.error(error);
+                    if (response.error) {
+                        console.error(response.message);
                     } 
                     if (response.message === 'content-script-recording-stopped') {
                         console.log(`Recording stopped for tab: ${response.tabId}`);
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (response.error) {
                         playbackButton.classList.remove('playing');
                         playbackText.textContent = 'Playback';
-                        console.error(response.error);
+                        console.error(response.message);
                     } else {
                         console.log(`Playback started for tab: ${response.tabId}`);
                     }
@@ -125,9 +125,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 playbackButton.classList.remove('playing');
                 playbackText.textContent = 'Playback';
                 chrome.runtime.sendMessage('stop-playback', (response) => {
-                    const error = chrome.runtime.lastError;
-                    if (error) {
-                        console.error(error);
+                    if (response.error) {
+                        console.error(response.message);
                     } else {
                         console.log(`Playback stopped for tab: ${response.tabId}`);
                     }

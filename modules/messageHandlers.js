@@ -19,11 +19,6 @@ import {
   storeEvent
 } from "./storage.js";
 
-// import { 
-//   logger,
-//   ERROR
-//  } from "./logger.js";
-
 import { 
   getInitialValue, 
   setInitialValue 
@@ -38,67 +33,66 @@ import {
 
 import Playback, { stopPlayback } from "./playback.js";
  
-// const path = import.meta.url;
-
 export async function handlePopupMessage(message, sender, sendResponse) {
-  console.log(`handlePopupMessage message is: ${message}`);
-  
   const tabId = getTestTabId();
-  console.log(`popupMessage: test tabId is ${tabId}`);
 
   if (message === 'get-recording-status') {
-    console.log(`popupMessage: get-recording-status message received.`);
     const playing = isPlaying();
     const recording = isRecording();
-    console.log(`popupMessage: playing status is ${playing}.`);
-    console.log(`popupMessage: recording status is ${recording}.`);
+    console.log(`messageHandlers.js: checking recording and playback status upon clicking record button => playing status is ${playing} and recording status is ${recording}.`);
     return sendResponse({ tabId: tabId, isPlaying: playing, isRecording: recording });
   }
 
   if (message === 'get-playback-status') {
-    console.log(`popupMessage: get-playback-status message received.`);
     const playing = isPlaying();
     const recording = isRecording();
-    console.log(`popupMessage: playing status is ${playing}.`);
-    console.log(`popupMessage: recording status is ${recording}.`);
+    console.log(`messageHandlers.js: checking recording and playback status upon clicking playback button => playing status is ${playing} and recording status is ${recording}.`);
     return sendResponse({ tabId: tabId, isPlaying: playing, isRecording: recording });
   }
 
   if (message === 'start-recording') {
     //message sent to content-script
-      chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'start-recording' }, (response) => {
-        const error = chrome.runtime.lastError;
-        if (error) {
-          const response = {
-            error: true,
-            message: error.message,
-            alert: `Error received from content-script when attempting to start-recording: ${error.message}`
-          };
-          console.error(`messageHandlers.js: error message received from content-script when attempting to start-recording: ${error.message}`);
-          return sendResponse(response);
-        }
-        if (response.message === 'content-script-recording-started') {
-            //TODO: need to set real recording ids
-            const recordingId = setRecordingId('test');
-            setRecordingStatus(true);
-            initializeRecordingTimer();
-            //TODO: should we handle storing initial URL solely in storage? what happens if you stop recording then start again for same recording?
-            storeInitUrl(recordingId, response.tabUrl);
-            return sendResponse(response);
-        } 
-      });
+    chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'start-recording' }, (messageResponse) => {
+      const error = chrome.runtime.lastError;
+      if (error) {
+        const response = {
+          error: true,
+          message: error.message,
+          alert: `Error received from content-script when attempting to start-recording: ${error.message}`
+        };
+        console.error(`messageHandlers.js: error message received from content-script when attempting to start-recording: ${error.message}`);
+        return sendResponse(response);
+      }
+      if (messageResponse.message === 'content-script-recording-started') {
+        //TODO: need to set real recording ids
+        const recordingId = setRecordingId('test');
+        setRecordingStatus(true);
+        initializeRecordingTimer();
+        //TODO: should we handle storing initial URL solely in storage? what happens if you stop recording then start again for same recording?
+        storeInitUrl(recordingId, response.tabUrl);
+        return sendResponse(messageResponse);
+      } 
+    });
   }
 
   if (message === 'stop-recording') {
     //message sent to content-script
-    chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'stop-recording' }, (response) => {
-      setRecordingStatus(false);
-      if (response.message !== 'content-script-recording-stopped') {
-          response.message = chrome.runtime.lastError;
-          response.alert = `messageHandlers.js: error message received from content-script when attempting to stop-recording`;
-          console.error(`messageHandlers.js: error message received from content-script when attempting to stop-recording`);
+    chrome.tabs.sendMessage(tabId, { tabId: tabId, action: 'stop-recording' }, (messageResponse) => {
+      const error = chrome.runtime.lastError;
+      if (error) {
+        const response = {
+          error: true,
+          message: error.message,
+          alert: `Error received from content-script when attempting to stop-recording: ${error.message}`
+        };
+        console.error(`messageHandlers.js: error message received from content-script when attempting to stop-recording: ${error.message}`);
+        return sendResponse(response);
       }
-      return sendResponse(response);
+      if (messageResponse.message === 'content-script-recording-stopped') {
+        //TODO: we need to shut off recording if there is an error too. how to handle that
+        setRecordingStatus(false);
+        return sendResponse(messageResponse);
+      }
     });
   }
 
@@ -108,7 +102,6 @@ export async function handlePopupMessage(message, sender, sendResponse) {
     return getPlaybackObject(recordingId)
     .then(playbackObject => Playback.create(recordingId, playbackObject))
     .then(playback => {
-      console.log('messageHandlers.js: start-playback playback object initially:', playback);
       const tabId = playback.tabId;
       playback.startPlayback();
       return sendResponse({
@@ -117,30 +110,37 @@ export async function handlePopupMessage(message, sender, sendResponse) {
       });
     })
     .catch(err => {
-      console.error(`messageHandlers.js: error when attempting to start playback: ${err}.`);
+      console.error(`messageHandlers.js: error when attempting to start playback: ${err.message ? err.message : err}.`);
       return sendResponse({
         error: true,
-        alert: `Error occured when attempting to start playback: ${err}.`
+        message: err.message ? err.message : err,
+        alert: `Error occured when attempting to start playback: ${err.message ? err.message : err}.`
       });
     });
   }
 
-  //TODO: REFACTOR
   if (message === 'stop-playback') {
     // stop the current playback using some sort of id
     //TODO: actually pass in a real recording id here, not just test. this should come from input in controls
     const recordingId = getRecordingId();
-    await stopPlayback(recordingId);
-    return sendResponse({
-      tabId,
-      alert: `Playback for ${recordingId} has been stopped.`
-    });
+    try {
+      await stopPlayback(recordingId);
+      return sendResponse({
+        tabId,
+        alert: `Playback for ${recordingId} has been stopped.`
+      });
+    } catch (err) {
+      console.error(`messageHandlers.js: error when attempting to stop playback: ${err.message ? err.message : err}.`);
+      return sendResponse({
+        error: true,
+        message: err.message ? err.message : err,
+        alert: `Error occured when attempting to stop playback: ${err.message ? err.message : err}.`
+      });
+    }
   }
 }
 
 export function handleContentScriptMessage(message, sender, sendResponse) {
-  console.log(`handleContentScriptMessage message is: ${message}`);
-  
   const tabId = sender.tab.id;
   const tabUrl = sender.tab.url;
   const testTabId = getTestTabId();
@@ -154,21 +154,17 @@ export function handleContentScriptMessage(message, sender, sendResponse) {
   }
 
   if (message === 'get-tab-info') {
-    console.log(`handleContentScriptMessage: tabId is ${tabId} and testTabId is ${testTabId}\n
-      handleContentScriptMessage: are we getting tab info for correct tab? ${isTestTab}`);
+    console.log(`handleContentScriptMessage: tabId is ${tabId} and testTabId is ${testTabId}. These should be equal.`);
 
-    console.log('messageHandlers.js: sending tab info to content script on initialization: ');
-    console.log(`messageHandlers.js: tabId => ${tabId}`);
-    console.log(`messageHandlers.js: tabUrl => ${tabUrl}`);
+    console.log(`messageHandlers.js: sending tab info to content script on initialization => tabId is ${tabId} and tabUrl is ${tabUrl}`);
     return sendResponse({ tabId, tabUrl });
   }
   
   //this is important b/c it covers cases where we are still in the same tab, but the window content changed, e.g. following a link
-  //TODO: isRecording returns undefined here when you refresh the page instead of starting a new tab. 
-  //this to do may not apply anymore since we are now pulling tab id from the set test tab id
+  //TODO: isRecording returns undefined here when you refresh the page instead of starting a new tab (this to do may not apply anymore since we are now pulling tab id from the set test tab id)
   if (message === 'is-recording-already-enabled') {
-    console.log(`messageHandlers.js: checking if recording already enabled for tabId: ${tabId}`);
     const recording = isRecording();
+    console.log(`messageHandlers.js: checking if recording is already enabled for tabId ${tabId} => ${recording}`);
 
     let response;
     if (recording) {
