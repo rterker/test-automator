@@ -116,20 +116,23 @@ class Playback {
 
   async enableDebuggingDomains(domains) {
     const failed = [];
+    const suceeded = [];
     for (let i = 0; i < domains.length; i++) {
       const domain = domains[i];
       try {
         await this.sendCommand(domain);
+        suceeded.push(domain);
       } catch (error) {
         failed.push(domain);
       }
     }
     if (failed.length === 0) {
-      console.log('All domains enabled successfully!');
+      console.log(`All domains enabled successfully: ${suceeded}`);
     } else if (failed.length === domains.length) {
-      console.log(`None of the domains were successfully enabled.`);
+      console.log(`None of the requested domains were successfully enabled.`);
     } else {
-      console.log(`Some domains were not enabled: ${failed}`);
+      console.log(`The following domains were enabled: ${suceeded}`);
+      console.log(`These domains were NOT enabled: ${failed}`);
     }
     return failed;
   }
@@ -151,17 +154,25 @@ class Playback {
     this.pushToPlaying();
     //TODO: wrap in try / catch
     await this.attachDebugger();
+    await this.enableDebuggingDomains(['DOM.enable']);
     let totalInterval = 0;
     let index = 0;
     while (isPlaying() && index < this.steps.length) {
       const event = this.steps[index];
+      const { action, targetCssSelector } = event;
       const { boundingBox, error } = await this.getBoundingBox(event);
       console.log(`result from getBoundingBox: ${JSON.stringify(boundingBox, null, 2)}`);
       if (error) console.error('Error occured in playback when getting bounding box: ', error);
       const interval = event.interval;
       totalInterval += interval;
       //TODO: refactor to control event generator using the event.action from the stored event. just doing click events now every time
-      const eventGenerator = new GenerateEvent(ClickEvent, boundingBox);
+      let eventGenerator;
+      try {
+        eventGenerator = new GenerateEvent(action, boundingBox, targetCssSelector);
+      } catch (error) {
+        await this.stopPlayback();
+        continue;
+      }
       const boundDipatch = eventGenerator.dispatch.bind(eventGenerator);
       const timeoutId = setTimeout(boundDipatch, totalInterval, this.tabId);
       this.timeoutIds.push(timeoutId);
@@ -207,15 +218,37 @@ class Playback {
 }
 
 class GenerateEvent {
-  constructor(type, boundingBox) {
-    this.type = type;
+  constructor(action, boundingBox, cssSelector) {
+    this.action = action;
+    this.cssSelector = cssSelector;
+    try {
+      this.type = this.setType();
+    } catch (error) {
+      console.error(`Error occured during GenerateEvent: ${error}`);
+      throw error;
+    }
     this.boundingBox = boundingBox;
     //TODO: seems to be an issue dispatching on certain elements. i think it may have to do with a wait
     this.x = this.boundingBox.x + (this.boundingBox.width / 2);
     this.y = this.boundingBox.y + (this.boundingBox.height / 2);
   }
+
+  setType() {
+    switch (this.action) {
+      case 'click': 
+        return ClickEvent;
+      case 'focus':
+        return FocusEvent;
+      case 'keydown':
+        return KeyboardEvent;
+      default: 
+        throw new Error(`Event action not recognized: ${this.action}`);
+    }
+  }
+
   async dispatch(tabId) {
-    const event = new this.type(this.x, this.y);
+    const event = new this.type(this.x, this.y, this.cssSelector);
+    //TODO: wrap in try / catch
     return await event.dispatch(tabId);
   }
 }
@@ -225,37 +258,47 @@ class ClickEvent {
     this.x = x;
     this.y = y;
   }
-  async dispatch(tabId) {
+  dispatch(tabId) {
     const x = this.x;
     const y = this.y;
 
-    await chrome.debugger.sendCommand(
-      {
-        tabId
-      },
-      "Input.dispatchMouseEvent",
-      {
-        type: "mousePressed",
-        x,
-        y,
-        button: "left",
-        clickCount: 1
-      }
-    );
-    await chrome.debugger.sendCommand(
-      {
-        tabId
-      },
-      "Input.dispatchMouseEvent",
-      {
-        type: "mouseReleased",
-        x,
-        y,
-        button: "left",
-        clickCount: 1
-      }
-    );
-  }
+    //TODO: handle errors
+    return new Promise((resolve, reject) => {
+      chrome.debugger.sendCommand(
+        {
+          tabId
+        },
+        "Input.dispatchMouseEvent",
+        {
+          type: "mousePressed",
+          x,
+          y,
+          button: "left",
+          clickCount: 1
+        },
+        () => {
+          console.log('Mouse pressed!');
+          chrome.debugger.sendCommand(
+            {
+              tabId
+            },
+            "Input.dispatchMouseEvent",
+            {
+              type: "mouseReleased",
+              x,
+              y,
+              button: "left",
+              clickCount: 1
+            },
+            () => {
+              console.log('Mouse released!');
+              return resolve();
+            }
+          );
+        }
+      );
+    });
+   }
 }
 
 //TODO: COMPLETE THIS
@@ -264,10 +307,61 @@ class KeyboardEvent {
   this.x = x;
   this.y = y;
  }
- async dispatch(tabId) {
-  await chrome.debugger.sendCommand();
-  await chrome.debugger.sendCommand();
+ dispatch(tabId) {
+  return new Promise((resolve, reject) => {
+    chrome.debugger.sendCommand();
+    chrome.debugger.sendCommand();
+  });
  }
+}
+
+class FocusEvent {
+  constructor(x, y, cssSelector) {
+    this.x = x;
+    this.y = y;
+    this.cssSelector = cssSelector;
+    console.log(`cssSelector in FocusEvent: ${this.cssSelector}`);
+  }
+
+  dispatch(tabId) {
+    return new Promise((resolve, reject) => {
+      chrome.debugger.sendCommand(
+        {
+          tabId
+        },
+        "DOM.querySelector",
+        {
+          nodeId: 1, 
+          selector: this.cssSelector 
+        }, 
+        (result) => {
+          console.log(`nodeId of focus element in FocusEvent is: ${result.nodeId}`);
+          if (result && result.nodeId) {
+            chrome.debugger.sendCommand(
+              {
+                tabId: targetTabId
+              },
+              "DOM.focus",
+              {
+                nodeId: result.nodeId
+              },
+              () => {
+                if (chrome.runtime.lastError) {
+                  console.error(`Error occured in FocusEvent dispatch: ${chrome.runtime.lastError.message}`);
+                  return reject(chrome.runtime.lastError);
+                }
+                return resolve();
+              }
+            );
+          } else {
+            console.error(`Node not found in FocusEvent dispatch: ${this.cssSelector}`);
+            return reject();
+          }
+        }
+      );
+    });
+  }
+
 }
 
 export default Playback;

@@ -202,9 +202,10 @@ function removeAllListeners(listeners) {
 // }
 
 function getBoundingBox(event) {
-    const { targetCssSelector } = event;
+    const { targetCssSelector, action } = event;
     const element = document.querySelector(targetCssSelector);
     console.log('element in getBoundingBox:', element)
+    console.log('action in getBoundingBox: ', action);
     if (!element) return null;
     const rect = element.getBoundingClientRect();
     const x = rect.left + window.scrollX;
