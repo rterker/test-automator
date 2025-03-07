@@ -204,16 +204,19 @@ function removeAllListeners(listeners) {
 function getBoundingBox(event) {
     const { targetCssSelector } = event;
     const element = document.querySelector(targetCssSelector);
+    console.log('element in getBoundingBox:', element)
     if (!element) return null;
     const rect = element.getBoundingClientRect();
     const x = rect.left + window.scrollX;
     const y = rect.top + window.scrollY;
-    return {
+    const result = {
         x,
         y,
         width: rect.width,
         height: rect.height
     };
+    console.log('result in getBoundingBox:', result)
+    return result;
 }
 
 // function focusOnElement(event) {

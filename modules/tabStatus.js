@@ -1,6 +1,3 @@
-// import { console, ERROR } from "./console.js";
-
-const path = import.meta.url;
 
 let testTabId;
 let tabHasFocus;

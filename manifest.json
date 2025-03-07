@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Automation Testing Prototype",
-    "description": "Prototype for Archer automation testing platform",
+    "description": "Prototype for automation testing platform",
     "version": "1.0",
     "permissions": [
         "tabs",

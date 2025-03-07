@@ -17,20 +17,36 @@ class Playback {
     this.tabId = getTestTabId();
     this.tabUrl = null;
     this.timeoutIds = [];
+    this.isDebuggerAttached = false;
+
+    chrome.debugger.onDetach.addListener(({ tabId }, reason) => {
+      if (tabId === this.tabId) {
+        this.isDebuggerAttached = false;
+        console.log(`Debugger detached from tab ${tabId}. Reason: ${reason}`);
+      }
+    });
   }
 
   static async create(recordingId, playbackObject) {
     const instance = new Playback(recordingId, playbackObject);
-    instance.tabUrl = await instance.getTabUrl();
-    return instance;
+    try {
+      instance.tabUrl = await instance.getTabUrl();
+      return instance;
+    } catch (error) {
+      console.log(`Playback instance not created on tab ${this.tabId}`);
+      throw error;
+    }
   }
 
   getTabUrl() {
-    return new Promise((res, rej) => {
-      chrome.tabs.get(this.tabId, function(tab) {
-        console.log('getTabUrl: tab.url is ', tab.url);
-        if (chrome.runtime.lastError) return rej(chrome.runtime.lastError);
-        return res(tab.url);
+    return new Promise((resolve, reject) => {
+      chrome.tabs.get(this.tabId, (tab) => {
+        if (chrome.runtime.lastError) {
+          console.error(`Error occured on tab ${this.tabId} when getting tabUrl: ${chrome.runtime.lastError}`);
+          return reject(chrome.runtime.lastError);
+        }
+        console.log(`getTabUrl successful for tab ${this.tabId}. Url is ${tab.url}`);
+        return resolve(tab.url);
       });
     });
   }
@@ -39,12 +55,88 @@ class Playback {
     playing[this.recordingId] = this;
   }
 
+  attachDebugger() {
+    if (this.isDebuggerAttached) {
+      console.log(`Debugger already attached for tab ${this.tabId} when attempting to attachDebugger`);
+      return;
+    }
+    return new Promise((resolve, reject) => {
+      chrome.debugger.attach({ tabId: this.tabId }, "1.3", () => {
+        if (chrome.runtime.lastError) {
+          console.error(`Error occured on tab ${this.tabId} when attaching debugger: ${chrome.runtime.lastError.message}`);
+          return reject(chrome.runtime.lastError);
+        }
+        this.isDebuggerAttached = true;
+        console.log(`Debugger attached successfully to tab: ${this.tabId}`);
+        resolve();
+      });
+    });
+  }
+
+  detachDebugger() {
+    if (!this.isDebuggerAttached) {
+      console.log(`Debugger already detached for tab ${this.tabId} when attempting to detachDebugger`);
+      return;
+    }
+    return new Promise((resolve, reject) => {
+      chrome.debugger.detach({ tabId: this.tabId }, () => {
+        if (chrome.runtime.lastError) {
+          console.error(`Error occured on tab ${this.tabId} when detaching debugger: ${chrome.runtime.lastError.message}`);
+          return reject(chrome.runtime.lastError);
+        }
+        this.isDebuggerAttached = false;
+        console.log(`Debugger detached successfully to tab: ${this.tabId}`);
+        resolve();
+      });
+    });
+  }
+
+  async sendCommand(method, commandParams) {
+    if (!this.isDebuggerAttached) {
+      try {
+        await this.attachDebugger();
+      } catch (error) {
+        console.error(`Error occured when attaching debugger to tab ${this.tabId} in sendCommand. Command (${method}) not sent.`);
+        throw error;
+      }
+    }
+
+    return new Promise((resolve, reject) => {
+      chrome.debugger.sendCommand({tabId: this.tabId}, method, commandParams, (result) => {
+        if (chrome.runtime.lastError) {
+          console.error(`Error occured on tab ${this.tabId} when sending debugger command => ${method}: ${chrome.runtime.lastError.message}`);
+          return reject(chrome.runtime.lastError );
+        }
+        const resultMessage = result ? (` Result is ${result}.`) : '';
+        console.log(`Command (${method}) successful!${resultMessage}`);
+        return resolve(result);
+      });
+    });
+  }
+
+  async enableDebuggingDomains(domains) {
+    const failed = [];
+    for (let i = 0; i < domains.length; i++) {
+      const domain = domains[i];
+      try {
+        await this.sendCommand(domain);
+      } catch (error) {
+        failed.push(domain);
+      }
+    }
+    if (failed.length === 0) {
+      console.log('All domains enabled successfully!');
+    } else if (failed.length === domains.length) {
+      console.log(`None of the domains were successfully enabled.`);
+    } else {
+      console.log(`Some domains were not enabled: ${failed}`);
+    }
+    return failed;
+  }
+
   startPlayback() {
     setPlaybackStatus(true);
     const initUrl = this.playbackObject.initUrl;
-    console.log(`Playback tabUrl: ${this.tabUrl}`);
-    console.log(`Playback tabId: ${this.tabId}`);
-    console.log(`Playback initUrl: ${initUrl}`);
     if (this.tabUrl === initUrl) {
         this.continuePlayback();
     } else {
@@ -57,18 +149,14 @@ class Playback {
 
   async continuePlayback() {
     this.pushToPlaying();
-    await chrome.debugger.attach(
-      {
-        tabId: this.tabId
-      },
-      "1.3"
-    );
+    //TODO: wrap in try / catch
+    await this.attachDebugger();
     let totalInterval = 0;
     let index = 0;
     while (isPlaying() && index < this.steps.length) {
       const event = this.steps[index];
       const { boundingBox, error } = await this.getBoundingBox(event);
-      console.log(`result from getBoundingBox: ${boundingBox}`);
+      console.log(`result from getBoundingBox: ${JSON.stringify(boundingBox, null, 2)}`);
       if (error) console.error('Error occured in playback when getting bounding box: ', error);
       const interval = event.interval;
       totalInterval += interval;
@@ -113,7 +201,8 @@ class Playback {
     this.timeoutIds = [];
     setPlaybackStatus(false);
     delete playing[this.recordingId];
-    await chrome.debugger.detach({ tabId: this.tabId });
+    //TODO: wrap in try / catch
+    await this.detachDebugger();
   }
 }
 
