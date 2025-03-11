@@ -1,5 +1,6 @@
 import { isPlaying, setPlaybackStatus } from "./tabStatus.js";
 import { getTestTabId } from "./tabStatus.js";
+import { debuggerManager } from "./debuggerManager.js";
 
 const playing = {};
 
@@ -17,20 +18,13 @@ class Playback {
     this.tabId = getTestTabId();
     this.tabUrl = null;
     this.timeoutIds = [];
-    this.isDebuggerAttached = false;
-
-    chrome.debugger.onDetach.addListener(({ tabId }, reason) => {
-      if (tabId === this.tabId) {
-        this.isDebuggerAttached = false;
-        console.log(`Debugger detached from tab ${tabId}. Reason: ${reason}`);
-      }
-    });
   }
 
   static async create(recordingId, playbackObject) {
     const instance = new Playback(recordingId, playbackObject);
     try {
       instance.tabUrl = await instance.getTabUrl();
+      await debuggerManager.attachDebugger(instance.tabId);
       return instance;
     } catch (error) {
       console.log(`Playback instance not created on tab ${this.tabId}`);
@@ -55,46 +49,10 @@ class Playback {
     playing[this.recordingId] = this;
   }
 
-  attachDebugger() {
-    if (this.isDebuggerAttached) {
-      console.log(`Debugger already attached for tab ${this.tabId} when attempting to attachDebugger`);
-      return;
-    }
-    return new Promise((resolve, reject) => {
-      chrome.debugger.attach({ tabId: this.tabId }, "1.3", () => {
-        if (chrome.runtime.lastError) {
-          console.error(`Error occured on tab ${this.tabId} when attaching debugger: ${chrome.runtime.lastError.message}`);
-          return reject(chrome.runtime.lastError);
-        }
-        this.isDebuggerAttached = true;
-        console.log(`Debugger attached successfully to tab: ${this.tabId}`);
-        resolve();
-      });
-    });
-  }
-
-  detachDebugger() {
-    if (!this.isDebuggerAttached) {
-      console.log(`Debugger already detached for tab ${this.tabId} when attempting to detachDebugger`);
-      return;
-    }
-    return new Promise((resolve, reject) => {
-      chrome.debugger.detach({ tabId: this.tabId }, () => {
-        if (chrome.runtime.lastError) {
-          console.error(`Error occured on tab ${this.tabId} when detaching debugger: ${chrome.runtime.lastError.message}`);
-          return reject(chrome.runtime.lastError);
-        }
-        this.isDebuggerAttached = false;
-        console.log(`Debugger detached successfully to tab: ${this.tabId}`);
-        resolve();
-      });
-    });
-  }
-
-  async sendCommand(method, commandParams) {
-    if (!this.isDebuggerAttached) {
+  async sendCommand(method, commandParams = {}) {
+    if (debuggerManager.getTabAttachmentStatus(this.tabId) === false) {
       try {
-        await this.attachDebugger();
+        await debuggerManager.attachDebugger(this.tabId);
       } catch (error) {
         console.error(`Error occured when attaching debugger to tab ${this.tabId} in sendCommand. Command (${method}) not sent.`);
         throw error;
@@ -108,7 +66,7 @@ class Playback {
           return reject(chrome.runtime.lastError );
         }
         const resultMessage = result ? (` Result is ${result}.`) : '';
-        console.log(`Command (${method}) successful!${resultMessage}`);
+        console.log(`Command (${method}) successful!${JSON.stringify(resultMessage, null, 2)}`);
         return resolve(result);
       });
     });
@@ -153,7 +111,6 @@ class Playback {
   async continuePlayback() {
     this.pushToPlaying();
     //TODO: wrap in try / catch
-    await this.attachDebugger();
     await this.enableDebuggingDomains(['DOM.enable']);
     let totalInterval = 0;
     let index = 0;
@@ -213,7 +170,7 @@ class Playback {
     setPlaybackStatus(false);
     delete playing[this.recordingId];
     //TODO: wrap in try / catch
-    await this.detachDebugger();
+    await debuggerManager.detachDebugger(this.tabId);
   }
 }
 
@@ -247,58 +204,134 @@ class GenerateEvent {
   }
 
   async dispatch(tabId) {
-    const event = new this.type(this.x, this.y, this.cssSelector);
-    //TODO: wrap in try / catch
-    return await event.dispatch(tabId);
+    const event = new this.type(tabId, this.x, this.y, this.cssSelector);
+    //TODO: wrap in try / catch => how to handle errors in dispatch?
+    return await event.dispatch();
   }
 }
 
 class ClickEvent {
-  constructor(x, y) {
+  constructor(tabId, x, y) {
+    this.tabId = tabId;
     this.x = x;
     this.y = y;
   }
-  dispatch(tabId) {
+
+  async sendCommand(method, commandParams = {}) {
+    if (debuggerManager.getTabAttachmentStatus(this.tabId) === false) {
+      try {
+        await debuggerManager.attachDebugger(this.tabId);
+      } catch (error) {
+        console.error(`Error occured when attaching debugger to tab ${this.tabId} in sendCommand. Command (${method}) not sent.`);
+        throw error;
+      }
+    }
+
+    return new Promise((resolve, reject) => {
+      chrome.debugger.sendCommand({tabId: this.tabId}, method, commandParams, (result) => {
+        if (chrome.runtime.lastError) {
+          console.error(`Error occured on tab ${this.tabId} when sending debugger command => ${method}: ${chrome.runtime.lastError.message}`);
+          return reject(chrome.runtime.lastError );
+        }
+        const resultMessage = result ? (` Result is ${result}.`) : '';
+        console.log(`Command (${method}) successful!${JSON.stringify(resultMessage, null, 2)}`);
+        return resolve(result);
+      });
+    });
+  }
+
+  async dispatch() {
     const x = this.x;
     const y = this.y;
+    try {
+      let commandParams = {
+        type: "mousePressed",
+        x,
+        y,
+        button: "left",
+        clickCount: 1
+      };
+      await this.sendCommand("Input.dispatchMouseEvent", commandParams);
+      console.log('Mouse pressed!');
+      commandParams = {
+        type: "mouseReleased",
+        x,
+        y,
+        button: "left",
+        clickCount: 1
+      };
+      await this.sendCommand("Input.dispatchMouseEvent", commandParams);
+      console.log('Mouse released!');
+    } catch (error) {
+      throw error;
+    }
+   }
+}
 
-    //TODO: handle errors
+
+class FocusEvent {
+  constructor(tabId, x, y, cssSelector) {
+    this.tabId = tabId;
+    this.x = x;
+    this.y = y;
+    this.cssSelector = cssSelector;
+  }
+  
+  async sendCommand(method, commandParams = {}) {
+    if (debuggerManager.getTabAttachmentStatus(this.tabId) === false) {
+      try {
+        await debuggerManager.attachDebugger(this.tabId);
+      } catch (error) {
+        console.error(`Error occured when attaching debugger to tab ${this.tabId} in sendCommand. Command (${method}) not sent.`);
+        throw error;
+      }
+    }
+
     return new Promise((resolve, reject) => {
-      chrome.debugger.sendCommand(
+      chrome.debugger.sendCommand({tabId: this.tabId}, method, commandParams, (result) => {
+        if (chrome.runtime.lastError) {
+          console.error(`Error occured on tab ${this.tabId} when sending debugger command => ${method}: ${chrome.runtime.lastError.message}`);
+          return reject(chrome.runtime.lastError );
+        }
+        const resultMessage = result ? (` Result is ${result}.`) : '';
+        console.log(`Command (${method}) successful!${JSON.stringify(resultMessage, null, 2)}`);
+        return resolve(result);
+      });
+    });
+  }
+  
+  async dispatch() {
+    try {
+      const rootObject = await this.sendCommand(
+        "DOM.getDocument"
+      );
+      if (!rootObject.root) {
+        const error = `Root node not found in FocusEvent dispatch`;
+        console.error(error);
+        throw error;
+      }
+      const result = await this.sendCommand(
+        "DOM.querySelector", 
         {
-          tabId
-        },
-        "Input.dispatchMouseEvent",
-        {
-          type: "mousePressed",
-          x,
-          y,
-          button: "left",
-          clickCount: 1
-        },
-        () => {
-          console.log('Mouse pressed!');
-          chrome.debugger.sendCommand(
-            {
-              tabId
-            },
-            "Input.dispatchMouseEvent",
-            {
-              type: "mouseReleased",
-              x,
-              y,
-              button: "left",
-              clickCount: 1
-            },
-            () => {
-              console.log('Mouse released!');
-              return resolve();
-            }
-          );
+          nodeId: rootObject.root.nodeId, 
+          selector: this.cssSelector 
         }
       );
-    });
-   }
+      if (!result.nodeId) {
+        const error = `Node not found in FocusEvent dispatch: ${this.cssSelector}`;
+        console.error(error);
+        throw error;
+      }
+      await this.sendCommand(
+        "DOM.focus", 
+        {
+          nodeId: result.nodeId
+        }
+      );
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 //TODO: COMPLETE THIS
@@ -315,54 +348,6 @@ class KeyboardEvent {
  }
 }
 
-class FocusEvent {
-  constructor(x, y, cssSelector) {
-    this.x = x;
-    this.y = y;
-    this.cssSelector = cssSelector;
-    console.log(`cssSelector in FocusEvent: ${this.cssSelector}`);
-  }
-
-  dispatch(tabId) {
-    return new Promise((resolve, reject) => {
-      chrome.debugger.sendCommand(
-        {
-          tabId
-        },
-        "DOM.querySelector",
-        {
-          nodeId: 1, 
-          selector: this.cssSelector 
-        }, 
-        (result) => {
-          console.log(`nodeId of focus element in FocusEvent is: ${result.nodeId}`);
-          if (result && result.nodeId) {
-            chrome.debugger.sendCommand(
-              {
-                tabId: targetTabId
-              },
-              "DOM.focus",
-              {
-                nodeId: result.nodeId
-              },
-              () => {
-                if (chrome.runtime.lastError) {
-                  console.error(`Error occured in FocusEvent dispatch: ${chrome.runtime.lastError.message}`);
-                  return reject(chrome.runtime.lastError);
-                }
-                return resolve();
-              }
-            );
-          } else {
-            console.error(`Node not found in FocusEvent dispatch: ${this.cssSelector}`);
-            return reject();
-          }
-        }
-      );
-    });
-  }
-
-}
 
 export default Playback;
 
@@ -376,5 +361,10 @@ export default Playback;
 //alert user that playback has stopped
 //set playback status to false
 //dispatch error messages to control window
+
+
+// class Messenger {
+
+// }
 
 
